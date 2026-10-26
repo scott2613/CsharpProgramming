@@ -1,0 +1,318 @@
+﻿@model IEnumerable<ComputerStore.Web.Models.CartItem>
+@{
+    ViewData["Title"] = "Giỏ hàng - BMDTStore";
+
+    Func<object, string, object?> getProp = (obj, propName) =>
+    {
+        if (obj == null) return null;
+        var p = obj.GetType().GetProperty(propName);
+        if (p != null) return p.GetValue(obj);
+
+        var productProp = obj.GetType().GetProperty("Product");
+        if (productProp != null)
+        {
+            var productObj = productProp.GetValue(obj);
+            if (productObj != null)
+            {
+                return productObj.GetType().GetProperty(propName)?.GetValue(productObj);
+            }
+        }
+        return null;
+    };
+
+    decimal total = 0;
+    if (Model != null)
+    {
+        foreach (var x in Model)
+        {
+            var pVal = getProp(x, "Price") ?? getProp(x, "UnitPrice");
+            var qVal = getProp(x, "Quantity");
+            decimal price = pVal != null ? Convert.ToDecimal(pVal) : 0m;
+            int qty = qVal != null ? Convert.ToInt32(qVal) : 1;
+            total += (price * qty);
+        }
+    }
+}
+
+<style>
+    body {
+        background-color: #080c0d !important;
+        color: #ffffff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* NÚT QUAY LẠI TRÒN CÓ MŨI TÊN QUAY NGƯỢC BÊN TRÁI */
+    .btn-back-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(93, 242, 214, 0.08);
+        border: 1.5px solid #5df2d6;
+        color: #5df2d6;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 19px;
+        transition: all 0.25s ease;
+        box-shadow: 0 0 10px rgba(93, 242, 214, 0.15);
+        flex-shrink: 0;
+    }
+
+        .btn-back-circle:hover {
+            background: #5df2d6;
+            color: #080c0d;
+            box-shadow: 0 0 16px rgba(93, 242, 214, 0.4);
+            transform: scale(1.08);
+        }
+
+    .cart-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 12px;
+    }
+
+        .cart-table th {
+            color: #5df2d6;
+            font-weight: 700;
+            padding: 12px 16px;
+            border-bottom: 1px solid #1e453e;
+        }
+
+    .cart-row {
+        background-color: #0e1516;
+        border: 1px solid #1e453e;
+    }
+
+        .cart-row td {
+            padding: 16px;
+            vertical-align: middle;
+            position: relative;
+        }
+
+    .qty-control {
+        display: inline-flex;
+        align-items: center;
+        background: #141f21;
+        border: 1px solid #1e453e;
+        border-radius: 6px;
+        overflow: hidden;
+        position: relative;
+        z-index: 5;
+    }
+
+    .qty-btn {
+        background: transparent;
+        border: none;
+        color: #5df2d6;
+        font-weight: 800;
+        width: 34px;
+        height: 34px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        transition: 0.2s;
+        user-select: none;
+    }
+
+        .qty-btn:hover {
+            background: #1e453e;
+            color: #fff;
+        }
+
+    .qty-val {
+        width: 44px;
+        text-align: center;
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-weight: 700;
+        font-size: 14px;
+        display: inline-block;
+    }
+
+    .btn-delete {
+        background: transparent;
+        border: 1px solid rgba(248, 113, 113, 0.4);
+        color: #f87171;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: 0.2s;
+        position: relative;
+        z-index: 5;
+    }
+
+        .btn-delete:hover {
+            background: rgba(248, 113, 113, 0.2);
+            color: #ff9999;
+            border-color: #f87171;
+        }
+
+    .btn-checkout {
+        background: linear-gradient(135deg, #00796b, #004d40);
+        border: 1px solid #5df2d6;
+        color: #fff;
+        font-weight: 700;
+        padding: 12px 32px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-block;
+        transition: 0.2s;
+    }
+
+        .btn-checkout:hover {
+            background: #5df2d6;
+            color: #080c0d;
+            box-shadow: 0 0 14px rgba(93, 242, 214, 0.5);
+        }
+</style>
+
+<div class="container py-4">
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger mb-4" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; border-radius: 6px; padding: 12px;">
+            ⚠️ @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- TIÊU ĐỀ & NÚT QUAY LẠI TRÒN BÊN TRÁI -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <a href="/Product" class="btn-back-circle" title="Tiếp tục mua sắm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h2 style="color: #5df2d6; font-weight: 800; margin: 0; letter-spacing: -0.02em;">
+                    🛒 GIỎ HÀNG CỦA BẠN
+                </h2>
+                <small style="color: #8da4a4;">Kiểm tra cấu hình máy tính và thiết bị đã chọn trước khi thanh toán</small>
+            </div>
+        </div>
+
+        @if (Model != null && Model.Any())
+        {
+            <div>
+                <a href="/Cart/ClearCart" style="color: #f87171; text-decoration: none; font-size: 13px; font-weight: 600;" onclick="return confirm('Bạn có chắc muốn làm trống toàn bộ giỏ hàng?');">
+                    🗑️ Làm trống giỏ
+                </a>
+            </div>
+        }
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Đơn giá</th>
+                        <th class="text-center">Số lượng</th>
+                        <th class="text-end">Tạm tính</th>
+                        <th class="text-center" style="width: 90px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var name = getProp(item, "ProductName")?.ToString()
+                        ?? getProp(item, "Name")?.ToString()
+                        ?? "Laptop Gaming";
+
+                        var idObj = getProp(item, "ProductId") ?? getProp(item, "Id");
+                        int id = idObj != null ? Convert.ToInt32(idObj) : 0;
+
+                        var rawImg = getProp(item, "ImageUrl")?.ToString()
+                        ?? getProp(item, "Image")?.ToString()
+                        ?? "";
+
+                        var priceObj = getProp(item, "Price") ?? getProp(item, "UnitPrice");
+                        var price = priceObj != null ? Convert.ToDecimal(priceObj) : 0m;
+
+                        var qtyObj = getProp(item, "Quantity");
+                        var qty = qtyObj != null ? Convert.ToInt32(qtyObj) : 1;
+
+                        int stock = 15;
+                        var prodObj = item.GetType().GetProperty("Product")?.GetValue(item);
+                        if (prodObj != null)
+                        {
+                            var stockProp = prodObj.GetType().GetProperty("StockQuantity");
+                            if (stockProp != null)
+                            {
+                                stock = Convert.ToInt32(stockProp.GetValue(prodObj) ?? 15);
+                            }
+                        }
+
+                        var img = string.IsNullOrWhiteSpace(rawImg)
+                        ? "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=500&q=80"
+                        : (rawImg.StartsWith("http") || rawImg.StartsWith("/") ? rawImg : "/" + rawImg);
+
+                        <tr class="cart-row">
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="@img" alt="@name"
+                                         style="width: 75px; height: 55px; object-fit: contain; background: #080c0d; border-radius: 4px; padding: 4px; border: 1px solid #1e453e;"
+                                         onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=500&q=80';" />
+                                    <div>
+                                        <div style="font-weight: 700; color: #fff; font-size: 15px;">@name</div>
+                                        <div style="font-size: 12px; color: #8da4a4; margin-top: 3px;">
+                                            Mã: <span style="color: #5df2d6; font-weight: 700;">#@id</span>
+                                            <span class="mx-1">•</span>
+                                            <span style="color: #6ee7b7;"><i class="bi bi-box-seam me-1"></i>Còn lại: @stock máy</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="color: #c7d2d2; font-weight: 600;">@string.Format("{0:N0} đ", price)</td>
+
+                            <!-- SỐ LƯỢNG -->
+                            <td class="text-center">
+                                <div class="qty-control">
+                                    <a href="/Cart/UpdateQuantity?productId=@id&quantity=@(qty - 1)" class="qty-btn">−</a>
+                                    <span class="qty-val">@qty</span>
+                                    <a href="/Cart/UpdateQuantity?productId=@id&quantity=@(qty + 1)" class="qty-btn">+</a>
+                                </div>
+                            </td>
+
+                            <td class="text-end" style="color: #facc15; font-weight: 800; font-size: 16px;">
+                                @string.Format("{0:N0} đ", price * qty)
+                            </td>
+
+                            <!-- THAO TÁC XÓA -->
+                            <td class="text-center">
+                                <a href="/Cart/RemoveFromCart?productId=@id" class="btn-delete" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
+                                    🗑️ Xóa
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-4 p-4" style="background: #0e1516; border: 1px solid #1e453e; border-radius: 8px;">
+            <div style="font-size: 16px; color: #8da4a4; font-weight: 700;">TỔNG TIỀN THANH TOÁN:</div>
+            <div class="d-flex align-items-center gap-4">
+                <div style="font-size: 26px; font-weight: 800; color: #5df2d6;">@string.Format("{0:N0} đ", total)</div>
+                <a href="@Url.Action("Checkout", "Cart")" class="btn-checkout">
+                    TIẾN HÀNH ĐẶT HÀNG
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5" style="background: #0e1516; border: 1px solid #1e453e; border-radius: 8px;">
+            <p style="color: #8da4a4; font-size: 16px; margin-bottom: 20px;">Giỏ hàng của bạn đang trống.</p>
+            <a href="/Product" style="background: #143d35; border: 1px solid #5df2d6; color: #5df2d6; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-weight: 700; display: inline-block;">Khám phá máy tính ngay</a>
+        </div>
+    }
+</div>

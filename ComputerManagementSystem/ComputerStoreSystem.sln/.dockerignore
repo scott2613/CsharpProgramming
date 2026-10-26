@@ -1,0 +1,7 @@
+Set-Content -Path .gitignore -Value @"
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+"@

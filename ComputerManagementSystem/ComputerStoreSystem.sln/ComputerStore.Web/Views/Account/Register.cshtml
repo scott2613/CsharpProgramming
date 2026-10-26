@@ -1,0 +1,133 @@
+﻿@model ComputerStore.Web.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Đăng ký thành viên - DTBStore";
+}
+
+<style>
+    body {
+        background-color: #080c0d !important;
+        color: #ffffff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .auth-card {
+        background-color: #0e1516;
+        border: 1px solid #1e453e;
+        border-radius: 12px;
+        padding: 35px;
+        max-width: 520px;
+        margin: 40px auto;
+        box-shadow: 0 0 30px rgba(93, 242, 214, 0.12);
+    }
+
+    .form-control-cyber {
+        background-color: #141f21;
+        border: 1px solid #1e453e;
+        color: #ffffff;
+        border-radius: 6px;
+        padding: 10px 14px;
+        width: 100%;
+        margin-bottom: 12px;
+        outline: none;
+        transition: 0.2s;
+    }
+
+        .form-control-cyber:focus {
+            border-color: #5df2d6;
+            box-shadow: 0 0 8px rgba(93, 242, 214, 0.4);
+        }
+
+    .btn-auth {
+        background: linear-gradient(135deg, #00796b, #004d40);
+        border: 1px solid #5df2d6;
+        color: #fff;
+        font-weight: 700;
+        padding: 12px 0;
+        width: 100%;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-top: 10px;
+    }
+
+        .btn-auth:hover {
+            background: #5df2d6;
+            color: #080c0d;
+            box-shadow: 0 0 12px rgba(93, 242, 214, 0.4);
+        }
+
+    .alert-cyber-danger {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid #f87171;
+        color: #fca5a5;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 13.5px;
+        margin-bottom: 18px;
+        font-weight: 600;
+        line-height: 1.5;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="auth-card">
+        <div class="text-center mb-4">
+            <h2 style="color: #5df2d6; font-weight: 800; letter-spacing: 1px;">⚡ ĐĂNG KÝ TÀI KHOẢN</h2>
+            <p style="color: #8da4a4; font-size: 13.5px;">Gia nhập cộng đồng người dùng phần cứng công nghệ cao DTBStore</p>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid && ViewData.ModelState[""]?.Errors.Count > 0)
+        {
+            <div class="alert-cyber-danger">
+                <i class="bi bi-shield-x me-1"></i>
+                @foreach (var error in ViewData.ModelState[""]!.Errors)
+                {
+                    <div>@error.ErrorMessage</div>
+                }
+            </div>
+        }
+
+        <form asp-action="Register" method="post">
+            <label style="color: #8da4a4; font-size: 13px; margin-bottom: 4px;">Họ và tên của bạn</label>
+            <input asp-for="FullName" class="form-control-cyber" placeholder="Nguyễn Văn A" required />
+            <span asp-validation-for="FullName" class="text-danger d-block mb-2" style="font-size: 12px;"></span>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label style="color: #8da4a4; font-size: 13px; margin-bottom: 4px;">Số điện thoại</label>
+                    <input asp-for="PhoneNumber" class="form-control-cyber" placeholder="0912345678" required />
+                    <span asp-validation-for="PhoneNumber" class="text-danger d-block mb-2" style="font-size: 12px;"></span>
+                </div>
+                <div class="col-md-6">
+                    <label style="color: #8da4a4; font-size: 13px; margin-bottom: 4px;">Địa chỉ Email</label>
+                    <input asp-for="Email" type="email" class="form-control-cyber" placeholder="email@gmail.com" required />
+                    <span asp-validation-for="Email" class="text-danger d-block mb-2" style="font-size: 12px;"></span>
+                </div>
+            </div>
+
+            <label style="color: #8da4a4; font-size: 13px; margin-bottom: 4px;">Địa chỉ nhận hàng mặc định</label>
+            <textarea asp-for="Address" class="form-control-cyber" rows="2" placeholder="Số nhà, tên đường, phường/xã, quận/huyện..." required></textarea>
+            <span asp-validation-for="Address" class="text-danger d-block mb-2" style="font-size: 12px;"></span>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label style="color: #8da4a4; font-size: 13px; margin-bottom: 4px;">Mật khẩu</label>
+                    <input asp-for="Password" type="password" class="form-control-cyber" placeholder="Tối thiểu 6 ký tự" required />
+                    <span asp-validation-for="Password" class="text-danger d-block mb-2" style="font-size: 12px;"></span>
+                </div>
+                <div class="col-md-6">
+                    <label style="color: #8da4a4; font-size: 13px; margin-bottom: 4px;">Xác nhận mật khẩu</label>
+                    <input asp-for="ConfirmPassword" type="password" class="form-control-cyber" placeholder="Nhập lại mật khẩu" required />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger d-block mb-2" style="font-size: 12px;"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-auth">TẠO TÀI KHOẢN NGAY</button>
+        </form>
+
+        <div class="text-center mt-3" style="font-size: 13.5px; color: #8da4a4;">
+            Đã có tài khoản?
+            <a href="/Account/Login" style="color: #5df2d6; text-decoration: none; font-weight: 700;">Đăng nhập tại đây</a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,28 @@
+name: .NET Build & Deploy
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore Web Project
+      run: dotnet restore ComputerStore.Web/ComputerStore.Web.csproj
+
+    - name: Build Web Project
+      run: dotnet build ComputerStore.Web/ComputerStore.Web.csproj --configuration Release --no-restore -p:EnableWindowsTargeting=true
+
+    - name: Publish Web Project
+      run: dotnet publish ComputerStore.Web/ComputerStore.Web.csproj -c Release -o ./publish -p:UseAppHost=false

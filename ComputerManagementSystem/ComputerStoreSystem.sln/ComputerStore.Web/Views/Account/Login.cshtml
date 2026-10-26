@@ -1,0 +1,235 @@
+﻿@model ComputerStore.Web.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập - DTBStore";
+}
+
+<style>
+    body {
+        background-color: #080c0d !important;
+        color: #ffffff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* NÚT QUAY LẠI TRÒN CÓ MŨI TÊN QUAY NGƯỢC BÊN TRÁI */
+    .btn-back-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(93, 242, 214, 0.08);
+        border: 1.5px solid #5df2d6;
+        color: #5df2d6;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 19px;
+        transition: all 0.25s ease;
+        box-shadow: 0 0 10px rgba(93, 242, 214, 0.15);
+        flex-shrink: 0;
+    }
+
+        .btn-back-circle:hover {
+            background: #5df2d6;
+            color: #080c0d;
+            box-shadow: 0 0 16px rgba(93, 242, 214, 0.4);
+            transform: scale(1.08);
+        }
+
+    .auth-card {
+        background-color: #0e1516;
+        border: 1px solid #1e453e;
+        border-radius: 12px;
+        padding: 35px;
+        max-width: 440px;
+        margin: 20px auto 40px auto;
+        box-shadow: 0 0 30px rgba(93, 242, 214, 0.12);
+    }
+
+    .form-control-cyber {
+        background-color: #141f21;
+        border: 1px solid #1e453e;
+        color: #ffffff;
+        border-radius: 6px;
+        padding: 12px 14px;
+        width: 100%;
+        margin-bottom: 15px;
+        outline: none;
+        transition: 0.2s;
+    }
+
+        .form-control-cyber:focus {
+            border-color: #5df2d6;
+            box-shadow: 0 0 10px rgba(93, 242, 214, 0.4);
+        }
+
+    .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
+        .password-wrapper input {
+            margin-bottom: 0 !important;
+            padding-right: 50px !important;
+        }
+
+    .btn-toggle-eye {
+        position: absolute;
+        right: 10px;
+        background: transparent;
+        border: none;
+        color: #5df2d6 !important;
+        cursor: pointer;
+        padding: 6px 10px;
+        font-size: 1.35rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        text-shadow: 0 0 10px #5df2d6, 0 0 20px rgba(93, 242, 214, 0.8);
+        transition: transform 0.2s ease, text-shadow 0.2s ease;
+    }
+
+        .btn-toggle-eye:hover {
+            color: #ffffff !important;
+            transform: scale(1.18);
+            text-shadow: 0 0 15px #5df2d6, 0 0 30px #5df2d6;
+        }
+
+        .btn-toggle-eye:focus {
+            outline: none;
+        }
+
+    .btn-auth {
+        background: linear-gradient(135deg, #00796b, #004d40);
+        border: 1px solid #5df2d6;
+        color: #fff;
+        font-weight: 700;
+        padding: 12px 0;
+        width: 100%;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+        margin-top: 10px;
+        letter-spacing: 0.5px;
+    }
+
+        .btn-auth:hover {
+            background: #5df2d6;
+            color: #080c0d;
+            box-shadow: 0 0 14px rgba(93, 242, 214, 0.5);
+        }
+
+    .alert-cyber-danger {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid #f87171;
+        color: #fca5a5;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 13.5px;
+        margin-bottom: 20px;
+        font-weight: 600;
+        line-height: 1.5;
+    }
+
+    .alert-cyber-warning {
+        background: rgba(234, 179, 8, 0.15);
+        border: 1px solid #eab308;
+        color: #fef08a;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 13.5px;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+</style>
+
+<div class="container py-4" style="max-width: 520px;">
+    <!-- NÚT TRÒN QUAY LẠI BÊN TRÁI -->
+    <div class="mb-3">
+        <a href="/Product" class="btn-back-circle" title="Quay lại cửa hàng">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+    </div>
+
+    <div class="auth-card m-0 w-100" style="max-width: 100%;">
+        <div class="text-center mb-4">
+            <h2 style="color: #5df2d6; font-weight: 800; letter-spacing: 1px;">⚡ ĐĂNG NHẬP</h2>
+            <p style="color: #8da4a4; font-size: 13.5px;">Chào mừng bạn trở lại với hệ sinh thái DTBStore</p>
+        </div>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success py-2 mb-3" style="background: rgba(52, 211, 153, 0.2); border-color: #34d399; color: #34d399; font-size: 13.5px;">
+                @TempData["SuccessMessage"]
+            </div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert-cyber-warning">
+                <i class="bi bi-exclamation-circle me-1"></i> @TempData["ErrorMessage"]
+            </div>
+        }
+
+        @if (!ViewData.ModelState.IsValid && ViewData.ModelState[""]?.Errors.Count > 0)
+        {
+            <div class="alert-cyber-danger">
+                <i class="bi bi-shield-x me-1"></i>
+                @foreach (var error in ViewData.ModelState[""]!.Errors)
+                {
+                    <div>@error.ErrorMessage</div>
+                }
+            </div>
+        }
+
+        <form action="/Account/Login" method="post">
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+
+            <label style="color: #8da4a4; font-size: 13px; margin-bottom: 4px;">Số điện thoại hoặc Email</label>
+            <input asp-for="Username" class="form-control-cyber" placeholder="0385550832 hoặc email@domain.com" required autocomplete="username" />
+            <span asp-validation-for="Username" class="text-danger" style="font-size: 12px;"></span>
+
+            <label style="color: #8da4a4; font-size: 13px; margin-bottom: 4px;">Mật khẩu</label>
+            <div class="password-wrapper">
+                <input asp-for="Password" type="password" id="loginPassword" class="form-control-cyber" placeholder="••••••••" required autocomplete="current-password" />
+                <button type="button" class="btn-toggle-eye" id="btnToggleEye" onclick="togglePassVisibility()" title="Ẩn/Hiện mật khẩu">
+                    <i id="loginEyeIcon" class="bi bi-eye-fill"></i>
+                </button>
+            </div>
+            <span asp-validation-for="Password" class="text-danger" style="font-size: 12px;"></span>
+
+            <div class="d-flex justify-content-between align-items-center mb-3" style="font-size: 13px;">
+                <label style="color: #8da4a4; cursor: pointer;">
+                    <input asp-for="RememberMe" type="checkbox" style="accent-color: #5df2d6;" /> Ghi nhớ tài khoản
+                </label>
+                <a href="/Account/ForgotPassword" style="color: #5df2d6; text-decoration: none; font-weight: 600;">
+                    Quên mật khẩu?
+                </a>
+            </div>
+
+            <button type="submit" class="btn-auth">ĐĂNG NHẬP NGAY</button>
+        </form>
+
+        <div class="text-center mt-4" style="font-size: 13.5px; color: #8da4a4; border-top: 1px solid #142826; padding-top: 18px;">
+            Chưa có tài khoản?
+            <a href="/Account/Register" style="color: #5df2d6; text-decoration: none; font-weight: 700;">Đăng ký thành viên</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePassVisibility() {
+        var input = document.getElementById("loginPassword");
+        var icon = document.getElementById("loginEyeIcon");
+        if (input.type === "password") {
+            input.type = "text";
+            icon.className = "bi bi-eye-slash-fill";
+        } else {
+            input.type = "password";
+            icon.className = "bi bi-eye-fill";
+        }
+    }
+</script>

@@ -1,0 +1,135 @@
+﻿/* 1. NẠP FONT CHỮ HIỆN ĐẠI (GIỐNG ẢNH MẪU: INTER / PLUS JAKARTA SANS) */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --theme-font: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --cyber-teal: #5df2d6;
+    --cyber-dark: #090e0f;
+    --cyber-card: #141f21;
+    --cyber-input: #1b282b;
+    --cyber-border: #2a4844;
+}
+
+body {
+    font-family: var(--theme-font) !important;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    background-color: var(--cyber-dark);
+    color: #f1f5f9;
+}
+
+h1, h2, h3, h4, h5, h6, .fw-bold {
+    font-family: var(--theme-font) !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em;
+}
+
+/* 2. LÀM CÁC Ô NHẬP LIỆU NỔI BẬT HƠN VÀ CHỮ CÁI RÕ NÉT */
+.form-control, .form-select, input[type="text"], input[type="password"], input[type="tel"], textarea {
+    font-family: var(--theme-font) !important;
+    background-color: var(--cyber-input) !important;
+    border: 1.5px solid var(--cyber-border) !important;
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    transition: all 0.25s ease-in-out;
+}
+
+    /* Placeholder nhắc nhở nổi bật nhưng dễ phân biệt */
+    .form-control::placeholder, textarea::placeholder {
+        color: #8da4a4 !important;
+        font-weight: 400 !important;
+        opacity: 0.85;
+    }
+
+    /* Hiệu ứng khi focus vào ô: sáng viền Cyber Teal */
+    .form-control:focus, textarea:focus, .form-select:focus {
+        background-color: #203134 !important;
+        border-color: var(--cyber-teal) !important;
+        box-shadow: 0 0 10px rgba(93, 242, 214, 0.35) !important;
+        color: #ffffff !important;
+        outline: none !important;
+    }
+
+.form-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--cyber-teal) !important;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 3. TỐI ƯU GIAO DIỆN ĐIỆN THOẠI (RESPONSIVE CHO MOBILE) */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+
+    /* Tiêu đề tự co nhỏ vừa màn hình điện thoại */
+    h1, .display-4 {
+        font-size: 1.65rem !important;
+    }
+
+    h2 {
+        font-size: 1.4rem !important;
+    }
+
+    h3 {
+        font-size: 1.2rem !important;
+    }
+
+    /* Bảng dữ liệu tự cuộn ngang trên điện thoại, không bể khung */
+    .table-responsive {
+        border-radius: 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Nút bấm to hơn để dễ chạm trên màn hình cảm ứng */
+    .btn {
+        padding: 12px 18px !important;
+        font-size: 0.95rem !important;
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    .btn-group-mobile {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* Thẻ sản phẩm hiển thị 2 cột hoặc 1 cột rõ nét */
+    .col-md-3, .col-md-4, .col-lg-3 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* 4. KHUNG ĐÁNH GIÁ & PHẢN HỒI (RATING & FEEDBACK) */
+.review-box {
+    background-color: #111a1b;
+    border: 1px solid #1f3d37;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 30px;
+}
+
+.star-rating {
+    font-size: 1.5rem;
+    color: #eab308;
+    cursor: pointer;
+}
+
+.review-item {
+    background: #172426;
+    border-left: 3px solid var(--cyber-teal);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+}

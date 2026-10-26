@@ -1,0 +1,840 @@
+﻿@model IEnumerable<ComputerStore.Core.Entities.Product>
+
+@{
+    ViewData["Title"] = "BMDTStore - Hệ Thống Máy Tính Cao Cấp";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalItems = ViewBag.TotalItems ?? 0;
+}
+
+<style>
+    :root {
+        --bg-dark: #080c0d;
+        --card-dark: #0e1516;
+        --card-inner: #141f21;
+        --card-border: #1e453e;
+        --neon-cyan: #5df2d6;
+        --neon-glow: rgba(93, 242, 214, 0.25);
+        --text-sub: #8da4a4;
+    }
+
+    body {
+        background-color: var(--bg-dark) !important;
+        color: #ffffff;
+        font-family: 'Rajdhani', sans-serif;
+    }
+
+    @@keyframes slideDownToast {
+        from {
+            transform: translateY(-30px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .search-filter-bar {
+        max-width: 820px;
+        margin: 0 auto 35px auto;
+    }
+
+    .search-cyber-box {
+        background: #111a1b;
+        border: 1.5px solid var(--card-border);
+        border-radius: 9999px;
+        padding: 6px 18px 6px 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+    }
+
+        .search-cyber-box:focus-within {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 16px var(--neon-glow);
+            background: #142223;
+        }
+
+        input#indexLiveSearch,
+        .search-cyber-box input,
+        .search-cyber-box input[type="text"],
+        .search-cyber-box input:focus {
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            border-width: 0 !important;
+            outline: none !important;
+            box-shadow: none !important;
+            -webkit-box-shadow: none !important;
+            border-radius: 0 !important;
+            color: #ffffff !important;
+        }
+
+    .search-cyber-input::placeholder {
+        color: var(--text-sub);
+    }
+
+    .btn-search-icon-only {
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        color: var(--neon-cyan);
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+        .btn-search-icon-only:hover {
+            color: #ffffff;
+            transform: scale(1.18);
+            text-shadow: 0 0 10px var(--neon-glow);
+        }
+
+    .btn-filter-circle {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: #111a1b;
+        border: 1px solid var(--card-border);
+        color: var(--neon-cyan);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        flex-shrink: 0;
+    }
+
+        .btn-filter-circle:hover,
+        .btn-filter-circle.active-filter {
+            background: #143d35;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 14px var(--neon-glow);
+            transform: scale(1.05);
+        }
+
+    .filter-dropdown-popup {
+        background: var(--card-dark);
+        border: 1px solid var(--card-border);
+        border-radius: 14px;
+        padding: 24px;
+        min-width: 360px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 25px rgba(93, 242, 214, 0.1);
+    }
+
+        .filter-dropdown-popup .form-label {
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-dropdown-popup .form-select,
+        .filter-dropdown-popup .form-control {
+            background-color: var(--card-inner);
+            border: 1px solid var(--card-border);
+            color: #ffffff;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+            .filter-dropdown-popup .form-select:focus,
+            .filter-dropdown-popup .form-control:focus {
+                border-color: var(--neon-cyan);
+                box-shadow: 0 0 8px var(--neon-glow);
+            }
+
+    .price-quick-btn {
+        background: #111a1b;
+        border: 1px solid var(--card-border);
+        color: #cce3de;
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .price-quick-btn:hover {
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+    #indexSuggestBox {
+        background: var(--card-dark) !important;
+        border: 1px solid var(--card-border) !important;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.9) !important;
+        z-index: 1060 !important;
+        max-height: 380px !important;
+        overflow-y: auto !important;
+        overscroll-behavior: contain;
+    }
+
+        #indexSuggestBox::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #indexSuggestBox::-webkit-scrollbar-thumb {
+            background: #1e453e;
+            border-radius: 4px;
+        }
+
+    .suggest-row {
+        background: var(--card-dark);
+        border-bottom: 1px solid rgba(30, 69, 62, 0.4);
+        transition: 0.2s;
+    }
+
+        .suggest-row:hover {
+            background: #142826;
+        }
+
+    .product-card-cyber {
+        background: var(--card-dark);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        position: relative;
+    }
+
+        .product-card-cyber:hover {
+            transform: translateY(-6px);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 25px var(--neon-glow);
+        }
+
+    .product-img-wrap {
+        background: #080c0d;
+        border-bottom: 1px solid var(--card-border);
+        height: 210px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 !important;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .product-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            transition: transform 0.4s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+    .product-card-cyber:hover .product-img-wrap img {
+        transform: scale(1.06);
+    }
+
+    .badge-cyber-cat {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: rgba(8, 14, 16, 0.95) !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1.5px solid var(--neon-cyan);
+        color: var(--neon-cyan);
+        font-size: 11px;
+        font-weight: 700;
+        padding: 5px 10px;
+        border-radius: 6px;
+        letter-spacing: 0.5px;
+        z-index: 30 !important;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.9);
+        pointer-events: none;
+    }
+
+    .badge-cyber-stock {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 5px 11px;
+        border-radius: 6px;
+        letter-spacing: 0.5px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 30 !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.95);
+        text-transform: uppercase;
+        pointer-events: none;
+    }
+
+    .stock-out {
+        background: rgba(45, 10, 15, 0.95) !important;
+        border: 1.5px solid #ff4d6d !important;
+        color: #ff758f !important;
+    }
+
+    .stock-last-one {
+        background: linear-gradient(135deg, #ff3b00 0%, #ff0055 100%) !important;
+        border: 1.5px solid #ffe600 !important;
+        color: #ffffff !important;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+        box-shadow: 0 0 18px rgba(255, 59, 0, 0.9), 0 4px 12px rgba(0, 0, 0, 0.9) !important;
+        animation: pulseLastOne 1.4s infinite ease-in-out;
+    }
+
+    .stock-low {
+        background: rgba(45, 35, 8, 0.95) !important;
+        border: 1.5px solid #ffc300 !important;
+        color: #ffd60a !important;
+    }
+
+    .stock-available {
+        background: rgba(6, 40, 28, 0.95) !important;
+        border: 1.5px solid #00f5d4 !important;
+        color: #00f5d4 !important;
+    }
+
+    @@keyframes pulseLastOne {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 12px rgba(255, 59, 0, 0.8);
+        }
+
+        50% {
+            transform: scale(1.06);
+            box-shadow: 0 0 22px rgba(255, 230, 0, 1);
+        }
+    }
+
+    .product-content {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    .product-title {
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 700;
+        line-height: 1.4;
+        margin-bottom: 6px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 46px;
+        transition: color 0.2s;
+    }
+
+    .product-card-cyber:hover .product-title {
+        color: var(--neon-cyan);
+    }
+
+    .product-specs {
+        color: var(--text-sub);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin-bottom: 14px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 40px;
+    }
+
+    .product-footer {
+        margin-top: auto;
+        padding-top: 12px;
+        border-top: 1px solid rgba(30, 69, 62, 0.4);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .product-price {
+        color: var(--neon-cyan);
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 800;
+        text-shadow: 0 0 10px var(--neon-glow);
+        white-space: nowrap;
+    }
+
+    .product-actions-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .btn-add-cart-quick {
+        background: rgba(93, 242, 214, 0.12);
+        border: 1px solid var(--neon-cyan);
+        color: var(--neon-cyan);
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 7px 14px;
+        border-radius: 8px;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+        .btn-add-cart-quick:hover {
+            background: var(--neon-cyan);
+            color: #080c0d;
+            box-shadow: 0 0 12px var(--neon-glow);
+        }
+
+    .btn-detail-quick {
+        background: #142022;
+        border: 1px solid var(--card-border);
+        color: var(--neon-cyan);
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 7px 12px;
+        border-radius: 8px;
+        transition: all 0.2s;
+        text-decoration: none;
+        flex-grow: 1;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        white-space: nowrap;
+    }
+
+    .product-card-cyber:hover .btn-detail-quick {
+        background: var(--neon-cyan);
+        color: #080c0d;
+        border-color: var(--neon-cyan);
+    }
+
+    .pagination-cyber {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-top: 45px;
+    }
+
+    .page-link-cyber {
+        background: #111a1b;
+        border: 1px solid var(--card-border);
+        color: var(--neon-cyan);
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 700;
+        transition: all 0.25s ease;
+    }
+
+        .page-link-cyber:hover {
+            background: #143d35;
+            border-color: var(--neon-cyan);
+            color: #ffffff;
+            box-shadow: 0 0 10px var(--neon-glow);
+        }
+
+        .page-link-cyber.active {
+            background: var(--neon-cyan);
+            color: #080c0d;
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 14px var(--neon-glow);
+        }
+
+        .page-link-cyber.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            border-color: rgba(30, 69, 62, 0.4);
+        }
+</style>
+
+<div class="container py-4">
+    <!-- 1. BẢNG THÔNG BÁO RIÊNG KHI ĐẶT HÀNG THÀNH CÔNG -->
+    @if (TempData["OrderSuccessToast"] != null)
+    {
+        <div id="orderSuccessToast" class="alert d-flex align-items-center justify-content-between mb-4 shadow-lg"
+             style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 78, 59, 0.45)); border: 1.5px solid #10b981; border-radius: 12px; padding: 16px 22px; box-shadow: 0 0 25px rgba(16, 185, 129, 0.45) !important; animation: slideDownToast 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: #10b981; color: #080c0d; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; box-shadow: 0 0 14px #10b981;">
+                    <i class="bi bi-box-seam-fill"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-1 text-white" style="letter-spacing: 0.5px; font-family: 'Orbitron', sans-serif; font-size: 1.05rem;">
+                        ĐẶT HÀNG THÀNH CÔNG!
+                    </h5>
+                    <div style="color: #a7f3d0; font-size: 14.5px; font-weight: 600;">@TempData["OrderSuccessToast"]</div>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" onclick="document.getElementById('orderSuccessToast').remove();" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- 2. BẢNG THÔNG BÁO RIÊNG KHI ĐĂNG NHẬP / ĐĂNG XUẤT THÀNH CÔNG -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div id="generalSuccessToast" class="alert d-flex align-items-center justify-content-between mb-4 shadow-lg"
+             style="background: rgba(14, 21, 22, 0.95); border: 1.5px solid var(--neon-cyan); border-radius: 12px; padding: 14px 20px; box-shadow: 0 0 20px var(--neon-glow) !important; animation: slideDownToast 0.5s cubic-bezier(0.16, 1, 0.3, 1);">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: var(--neon-cyan); color: #080c0d; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+                    <i class="bi bi-person-check-fill"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1 text-white" style="font-family: 'Orbitron', sans-serif; font-size: 0.95rem;">
+                        XÁC THỰC THÀNH CÔNG
+                    </h6>
+                    <div style="color: var(--neon-cyan); font-size: 14px; font-weight: 600;">@TempData["SuccessMessage"]</div>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" onclick="document.getElementById('generalSuccessToast').remove();" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-warning border-0 text-white mb-4" style="background: rgba(234, 179, 8, 0.15); border-left: 4px solid #eab308 !important;">
+            <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i> @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <!-- KHUNG TÌM KIẾM LIỀN KỀ BỘ LỌC TRÒN NÂNG CAO -->
+    <div class="search-filter-bar">
+        <div class="d-flex align-items-center gap-2">
+            <div class="flex-grow-1 position-relative">
+                <form method="get" asp-action="Index" class="search-cyber-box" id="mainSearchForm">
+                    <input type="text" id="indexLiveSearch" name="query" value="@ViewBag.CurrentQuery"
+                           class="search-cyber-input"
+                           style="background: transparent !important; background-color: transparent !important; border: 0 !important; border-width: 0 !important; outline: none !important; box-shadow: none !important; -webkit-box-shadow: none !important; border-radius: 0 !important; color: #ffffff !important; width: 100%; font-size: 1.05rem; font-weight: 600; padding: 4px 0 !important;"
+                           placeholder="Nhập tên máy, CPU, RTX, hoặc cấu hình cần tìm..." autocomplete="off" />
+                    <button type="submit" class="btn-search-icon-only" title="Tìm kiếm">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+
+                <div id="indexSuggestBox" class="list-group position-absolute w-100 mt-2 rounded-3 overflow-hidden d-none"></div>
+            </div>
+
+            <div class="dropdown">
+                <button class="btn-filter-circle @(ViewBag.CurrentCategory != null || !string.IsNullOrEmpty(ViewBag.CurrentBrand) || ViewBag.CurrentMinPrice != null || ViewBag.CurrentMaxPrice != null || !string.IsNullOrEmpty(ViewBag.CurrentSortBy) ? "active-filter" : "")"
+                        type="button" id="filterPopupBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Bộ lọc nâng cao">
+                    <i class="bi bi-sliders2"></i>
+                </button>
+
+                <div class="dropdown-menu dropdown-menu-end filter-dropdown-popup mt-2" aria-labelledby="filterPopupBtn">
+                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                        <span class="fw-bold" style="color: var(--neon-cyan); font-family: 'Orbitron', sans-serif; font-size: 0.85rem;">
+                            <i class="bi bi-funnel-fill me-1"></i> BỘ LỌC MÁY TÍNH
+                        </span>
+                        <a asp-action="Index" class="text-secondary small text-decoration-none">Đặt lại</a>
+                    </div>
+
+                    <form method="get" asp-action="Index" id="filterForm" onsubmit="return validateFilterPrice();">
+                        <input type="hidden" name="query" value="@ViewBag.CurrentQuery" />
+
+                        <div class="mb-3">
+                            <label class="form-label">DANH MỤC SẢN PHẨM</label>
+                            <select name="categoryId" class="form-select">
+                                <option value="">Tất cả danh mục</option>
+                                <option value="1" selected="@(ViewBag.CurrentCategory == 1)">Laptop Gaming</option>
+                                <option value="2" selected="@(ViewBag.CurrentCategory == 2)">Laptop Văn Phòng</option>
+                                <option value="3" selected="@(ViewBag.CurrentCategory == 3)">PC Gaming & Đồ Họa</option>
+                                <option value="4" selected="@(ViewBag.CurrentCategory == 4)">PC Văn Phòng Đồng Bộ</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">HÃNG SẢN XUẤT</label>
+                            <select name="brand" class="form-select">
+                                <option value="">Tất cả thương hiệu</option>
+                                <option value="ASUS" selected="@(ViewBag.CurrentBrand == "ASUS")">ASUS (ROG / TUF / Vivobook)</option>
+                                <option value="Lenovo" selected="@(ViewBag.CurrentBrand == "Lenovo")">Lenovo (Legion / IdeaPad)</option>
+                                <option value="Acer" selected="@(ViewBag.CurrentBrand == "Acer")">Acer (Nitro / Predator / Aspire)</option>
+                                <option value="Dell" selected="@(ViewBag.CurrentBrand == "Dell")">Dell (Inspiron / XPS / Alienware)</option>
+                                <option value="HP" selected="@(ViewBag.CurrentBrand == "HP")">HP (Victus / Pavilion / Omen)</option>
+                                <option value="MSI" selected="@(ViewBag.CurrentBrand == "MSI")">MSI Gaming</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">KHOẢNG GIÁ (VNĐ)</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" id="filterMinPrice" name="minPrice" value="@ViewBag.CurrentMinPrice" step="500000" min="0" class="form-control" placeholder="Từ" />
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" id="filterMaxPrice" name="maxPrice" value="@ViewBag.CurrentMaxPrice" step="500000" min="0" class="form-control" placeholder="Đến" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-1 mb-3 flex-wrap">
+                            <button type="button" class="price-quick-btn" onclick="setPriceRange(0, 15000000)">&lt; 15 Triệu</button>
+                            <button type="button" class="price-quick-btn" onclick="setPriceRange(15000000, 25000000)">15 - 25 Triệu</button>
+                            <button type="button" class="price-quick-btn" onclick="setPriceRange(25000000, 50000000)">&gt; 25 Triệu</button>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">SẮP XẾP</label>
+                            <select name="sortBy" class="form-select">
+                                <option value="" selected="@(string.IsNullOrEmpty(ViewBag.CurrentSortBy))">Mới nhất</option>
+                                <option value="price_asc" selected="@(ViewBag.CurrentSortBy == "price_asc")">Giá tăng dần</option>
+                                <option value="price_desc" selected="@(ViewBag.CurrentSortBy == "price_desc")">Giá giảm dần</option>
+                                <option value="name_asc" selected="@(ViewBag.CurrentSortBy == "name_asc")">Tên A-Z</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn py-2 w-100 rounded-3" style="background: #143d35; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); font-weight: 700;">ÁP DỤNG LỌC</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DANH SÁCH SẢN PHẨM -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                <div class="col">
+                    <div class="product-card-cyber" onclick="location.href='@Url.Action("Detail", "Product", new { id = item.ProductId })'">
+                        <div class="product-img-wrap">
+                            <span class="badge-cyber-cat">@(item.Category?.Name ?? "HARDWARE")</span>
+
+                            @if (item.StockQuantity <= 0)
+                            {
+                                <span class="badge-cyber-stock stock-out">HẾT HÀNG</span>
+                            }
+                            else if (item.StockQuantity == 1)
+                            {
+                                <span class="badge-cyber-stock stock-last-one">CÒN 1 MÁY</span>
+                            }
+                            else if (item.StockQuantity <= 3)
+                            {
+                                <span class="badge-cyber-stock stock-low">CÒN @item.StockQuantity MÁY</span>
+                            }
+                            else
+                            {
+                                <span class="badge-cyber-stock stock-available">CÒN HÀNG</span>
+                            }
+
+                            <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=600&q=80" : item.ImageUrl)"
+                                 alt="@item.Name"
+                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=600&q=80';" />
+                        </div>
+
+                        <div class="product-content">
+                            <h5 class="product-title" title="@item.Name">@item.Name</h5>
+                            <p class="product-specs">@(string.IsNullOrWhiteSpace(item.Specifications) ? "Cấu hình chuẩn chính hãng..." : item.Specifications)</p>
+
+                            <div class="product-footer">
+                                <span class="product-price">@item.Price.ToString("N0") đ</span>
+
+                                <div class="product-actions-group" onclick="event.stopPropagation();">
+                                    @if (item.StockQuantity > 0)
+                                    {
+                                        <form asp-controller="Cart" asp-action="AddToCart" method="post" class="m-0 flex-shrink-0">
+                                            <input type="hidden" name="productId" value="@item.ProductId" />
+                                            <input type="hidden" name="quantity" value="1" />
+                                            <button type="submit" class="btn-add-cart-quick" title="Thêm vào giỏ hàng">
+                                                <i class="bi bi-cart-plus-fill"></i> +Giỏ
+                                            </button>
+                                        </form>
+                                    }
+                                    <a href="@Url.Action("Detail", "Product", new { id = item.ProductId })" class="btn-detail-quick">
+                                        CHI TIẾT <i class="bi bi-chevron-right small"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-cpu fs-1" style="color: var(--neon-cyan); opacity: 0.6;"></i>
+                <h4 class="mt-3 text-white brand-font">KHÔNG TÌM THẤY SẢN PHẨM</h4>
+                <p style="color: var(--text-sub);">Hãy thử tìm kiếm với từ khóa khác hoặc thiết lập lại bộ lọc.</p>
+                <a asp-action="Index" class="btn px-4 py-2 mt-2" style="background: #143d35; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); border-radius: 8px; font-weight: 700; text-decoration: none;">XEM TẤT CẢ SẢN PHẨM</a>
+            </div>
+        }
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <div class="pagination-cyber">
+            <a class="page-link-cyber @(currentPage == 1 ? "disabled" : "")"
+               asp-action="Index"
+               asp-route-page="@(currentPage - 1)"
+               asp-route-query="@ViewBag.CurrentQuery"
+               asp-route-categoryId="@ViewBag.CurrentCategory"
+               asp-route-brand="@ViewBag.CurrentBrand"
+               asp-route-minPrice="@ViewBag.CurrentMinPrice"
+               asp-route-maxPrice="@ViewBag.CurrentMaxPrice"
+               asp-route-sortBy="@ViewBag.CurrentSortBy">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <a class="page-link-cyber @(i == currentPage ? "active" : "")"
+                   asp-action="Index"
+                   asp-route-page="@i"
+                   asp-route-query="@ViewBag.CurrentQuery"
+                   asp-route-categoryId="@ViewBag.CurrentCategory"
+                   asp-route-brand="@ViewBag.CurrentBrand"
+                   asp-route-minPrice="@ViewBag.CurrentMinPrice"
+                   asp-route-maxPrice="@ViewBag.CurrentMaxPrice"
+                   asp-route-sortBy="@ViewBag.CurrentSortBy">
+                    @i
+                </a>
+            }
+
+            <a class="page-link-cyber @(currentPage == totalPages ? "disabled" : "")"
+               asp-action="Index"
+               asp-route-page="@(currentPage + 1)"
+               asp-route-query="@ViewBag.CurrentQuery"
+               asp-route-categoryId="@ViewBag.CurrentCategory"
+               asp-route-brand="@ViewBag.CurrentBrand"
+               asp-route-minPrice="@ViewBag.CurrentMinPrice"
+               asp-route-maxPrice="@ViewBag.CurrentMaxPrice"
+               asp-route-sortBy="@ViewBag.CurrentSortBy">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+    }
+</div>
+
+<script>
+    function setPriceRange(min, max) {
+        document.getElementById('filterMinPrice').value = min > 0 ? min : '';
+        document.getElementById('filterMaxPrice').value = max > 0 ? max : '';
+    }
+
+    function validateFilterPrice() {
+        const min = parseFloat(document.getElementById('filterMinPrice').value) || 0;
+        const max = parseFloat(document.getElementById('filterMaxPrice').value) || 0;
+
+        if (min < 0 || max < 0) {
+            alert('Khoảng giá lọc không được là số âm!');
+            return false;
+        }
+
+        if (min > 0 && max > 0 && min > max) {
+            document.getElementById('filterMinPrice').value = max;
+            document.getElementById('filterMaxPrice').value = min;
+        }
+        return true;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Tự đóng thông báo sau 6 giây
+        const orderToast = document.getElementById("orderSuccessToast");
+        if (orderToast) {
+            setTimeout(() => {
+                orderToast.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+                orderToast.style.opacity = "0";
+                orderToast.style.transform = "translateY(-20px)";
+                setTimeout(() => orderToast.remove(), 600);
+            }, 6000);
+        }
+
+        const loginToast = document.getElementById("generalSuccessToast");
+        if (loginToast) {
+            setTimeout(() => {
+                loginToast.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+                loginToast.style.opacity = "0";
+                loginToast.style.transform = "translateY(-20px)";
+                setTimeout(() => loginToast.remove(), 600);
+            }, 5000);
+        }
+
+        const input = document.getElementById("indexLiveSearch");
+        const suggestBox = document.getElementById("indexSuggestBox");
+        let debounceTimer;
+
+        if (input && suggestBox) {
+            input.addEventListener("input", function () {
+                clearTimeout(debounceTimer);
+                const val = this.value.trim();
+
+                if (val.length < 1) {
+                    suggestBox.classList.add("d-none");
+                    suggestBox.innerHTML = "";
+                    return;
+                }
+
+                debounceTimer = setTimeout(() => {
+                    fetch(`/Product/Suggest?term=${encodeURIComponent(val)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data && data.length > 0) {
+                                let html = "";
+                                data.forEach(item => {
+                                    const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price);
+                                    html += `
+                                        <a href="/Product/Detail/${item.productId}" class="suggest-row list-group-item d-flex align-items-center gap-3 py-2 px-3 text-decoration-none">
+                                            <img src="${item.imageUrl || 'https://placehold.co/50x50'}" alt="${item.name}" style="width: 44px; height: 44px; object-fit: cover; background: #080c0d;" class="rounded border border-secondary border-opacity-25 p-0 flex-shrink-0">
+                                            <div class="flex-grow-1 overflow-hidden">
+                                                <div class="text-truncate text-white fw-bold small">${item.name}</div>
+                                                <div class="small fw-bold mt-1" style="color: #5df2d6;">${formattedPrice}</div>
+                                            </div>
+                                        </a>
+                                    `;
+                                });
+
+                                html += `
+                                    <div class="p-2 text-center border-top border-secondary border-opacity-25 bg-dark">
+                                        <button type="button" class="btn btn-sm text-info fw-bold w-100" onclick="document.getElementById('mainSearchForm').submit();">
+                                            Xem tất cả kết quả cho "${val}" <i class="bi bi-arrow-right"></i>
+                                        </button>
+                                    </div>
+                                `;
+
+                                suggestBox.innerHTML = html;
+                                suggestBox.classList.remove("d-none");
+                            } else {
+                                suggestBox.classList.add("d-none");
+                            }
+                        })
+                        .catch(() => suggestBox.classList.add("d-none"));
+                }, 200);
+            });
+
+            document.addEventListener("click", function (e) {
+                if (!input.contains(e.target) && !suggestBox.contains(e.target)) {
+                    suggestBox.classList.add("d-none");
+                }
+            });
+        }
+    });
+</script>

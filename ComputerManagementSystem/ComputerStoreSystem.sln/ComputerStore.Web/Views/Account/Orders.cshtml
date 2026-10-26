@@ -1,0 +1,487 @@
+﻿@model ComputerStore.Web.Models.ProfileViewModel
+@{
+    ViewData["Title"] = "Thông tin đơn hàng - BMDTStore";
+    var orders = ViewBag.Orders as List<ComputerStore.Web.Controllers.CustomerOrderHistoryDto> ?? new List<ComputerStore.Web.Controllers.CustomerOrderHistoryDto>();
+
+    int totalOrdersCount = orders.Count;
+    var completedOrders = orders.Where(o => o.Status == "Đã hoàn thành" || o.Status == "Hoàn thành").ToList();
+    int completedCount = completedOrders.Count;
+    decimal totalSpent = orders.Where(o => o.Status != "Đã hủy").Sum(o => o.TotalAmount);
+
+    var purchasedItems = completedOrders
+        .Where(o => o.OrderDetails != null)
+        .SelectMany(o => o.OrderDetails.Select(d => new
+        {
+            OrderId = o.OrderId,
+            OrderDate = o.OrderDate,
+            OrderStatus = o.Status,
+            ProductId = d.ProductId,
+            ProductName = d.ProductName,
+            Quantity = d.Quantity,
+            UnitPrice = d.UnitPrice,
+            SubTotal = d.TotalPrice > 0 ? d.TotalPrice : (d.UnitPrice * d.Quantity)
+        }))
+        .OrderByDescending(x => x.OrderId)
+        .ToList();
+
+    string accountKey = !string.IsNullOrWhiteSpace(Model?.PhoneNumber) ? Model.PhoneNumber.Trim() : (Model?.Email ?? "default_user");
+}
+
+<style>
+    :root {
+        --bg-dark: #080c0d;
+        --card-dark: #0e1516;
+        --card-border: #1e453e;
+        --neon-cyan: #5df2d6;
+        --neon-glow: rgba(93, 242, 214, 0.25);
+        --text-sub: #8da4a4;
+    }
+
+    body {
+        background-color: var(--bg-dark) !important;
+        color: #ffffff;
+        font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+    }
+
+    /* NÚT QUAY LẠI TRÒN CÓ MŨI TÊN QUAY NGƯỢC BÊN TRÁI */
+    .btn-back-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(93, 242, 214, 0.08);
+        border: 1.5px solid var(--neon-cyan);
+        color: var(--neon-cyan);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 19px;
+        transition: all 0.25s ease;
+        box-shadow: 0 0 10px rgba(93, 242, 214, 0.15);
+        flex-shrink: 0;
+    }
+
+        .btn-back-circle:hover {
+            background: var(--neon-cyan);
+            color: #080c0d;
+            box-shadow: 0 0 16px var(--neon-glow);
+            transform: scale(1.08);
+        }
+
+    .profile-card {
+        background-color: var(--card-dark);
+        border: 1px solid var(--card-border);
+        border-radius: 14px;
+        padding: 28px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    .order-table-cyber {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        color: #ffffff;
+    }
+
+        .order-table-cyber th {
+            background: #111e20;
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            padding: 14px 16px;
+            border-bottom: 2px solid var(--card-border);
+            text-transform: uppercase;
+        }
+
+        .order-table-cyber td {
+            padding: 15px 16px;
+            background: var(--card-dark);
+            border-bottom: 1px solid rgba(30, 69, 62, 0.5);
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .status-pending {
+        background: rgba(234, 179, 8, 0.15);
+        border: 1px solid #eab308;
+        color: #fde047;
+    }
+
+    .status-shipping {
+        background: rgba(59, 130, 246, 0.15);
+        border: 1px solid #3b82f6;
+        color: #93c5fd;
+    }
+
+    .status-completed {
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid #10b981;
+        color: #6ee7b7;
+    }
+
+    .status-cancelled {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid #ef4444;
+        color: #fca5a5;
+    }
+
+    .btn-cyber-tab {
+        background: #121f21;
+        border: 1.5px solid var(--card-border);
+        color: var(--text-sub);
+        font-size: 13px;
+        font-weight: 700;
+        padding: 7px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .btn-cyber-tab.active-tab {
+            background: rgba(93, 242, 214, 0.12);
+            border-color: var(--neon-cyan);
+            color: var(--neon-cyan);
+            box-shadow: 0 0 14px var(--neon-glow);
+        }
+
+    .btn-cyber-action {
+        background: #122123;
+        border: 1px solid var(--card-border);
+        color: var(--neon-cyan);
+        font-size: 12.5px;
+        font-weight: 700;
+        padding: 6px 12px;
+        border-radius: 7px;
+        cursor: pointer;
+    }
+
+    .btn-cancel-order {
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid #ef4444;
+        color: #fca5a5;
+        font-size: 12px;
+        font-weight: 700;
+        padding: 6px 12px;
+        border-radius: 7px;
+        cursor: pointer;
+    }
+
+    .btn-dismiss-row {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        color: #94a3b8;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 10px;
+        border-radius: 7px;
+        cursor: pointer;
+    }
+
+    .btn-rebuy-sm {
+        background: rgba(93, 242, 214, 0.1);
+        border: 1px solid var(--neon-cyan);
+        color: var(--neon-cyan);
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+    }
+</style>
+
+<div class="container py-4">
+    <!-- NÚT TRÒN QUAY LẠI BÊN TRÁI -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="/Product" class="btn-back-circle" title="Quay lại cửa hàng">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h2 style="color: var(--neon-cyan); font-weight: 800; margin: 0; letter-spacing: -0.02em;">
+                <i class="bi bi-box-seam-fill me-2"></i>THÔNG TIN VÀ LỊCH SỬ ĐƠN HÀNG
+            </h2>
+            <small style="color: var(--text-sub);">Theo dõi trạng thái xử lý đơn hàng và lịch sử thiết bị đã mua của tài khoản @Model?.FullName</small>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="profile-card">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button type="button" id="tabStatusBtn" class="btn-cyber-tab active-tab" onclick="switchProfileTab('status')">
+                            <i class="bi bi-box-seam-fill"></i> Tình trạng đơn hàng (<span id="visibleOrderCount">@orders.Count</span>)
+                        </button>
+                        <button type="button" id="tabHistoryBtn" class="btn-cyber-tab" onclick="switchProfileTab('history')">
+                            <i class="bi bi-clock-history"></i> Lịch sử mua hàng (<span id="visibleHistoryCount">@purchasedItems.Count</span>)
+                        </button>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button type="button" id="btnRestoreOrders" class="btn-cyber-action d-none" onclick="restoreAllDismissedOrders()">
+                            <i class="bi bi-arrow-counterclockwise"></i> Hiện lại đơn đã ẩn (<span id="hiddenOrderCount">0</span>)
+                        </button>
+                        <button type="button" id="btnRestoreHistory" class="btn-cyber-action d-none" onclick="restoreAllDismissedHistory()">
+                            <i class="bi bi-arrow-counterclockwise"></i> Hiện lại mục đã ẩn (<span id="hiddenHistoryCount">0</span>)
+                        </button>
+                    </div>
+                </div>
+
+                <div id="unifiedTableWrapper">
+                    <!-- BẢNG 1: TÌNH TRẠNG ĐƠN HÀNG -->
+                    <div id="statusTabContent">
+                        @if (orders.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="order-table-cyber">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã đơn</th>
+                                            <th>Ngày đặt</th>
+                                            <th>Sản phẩm / Cấu hình</th>
+                                            <th>Tổng tiền</th>
+                                            <th>Tình trạng đơn hàng</th>
+                                            <th class="text-end" style="width: 140px;">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in orders)
+                                        {
+                                            var firstProdId = item.OrderDetails?.FirstOrDefault()?.ProductId ?? 0;
+                                            <tr class="order-row-item" data-order-id="@item.OrderId" data-status="@item.Status" data-first-prod="@firstProdId">
+                                                <td><span style="font-family: 'Orbitron'; font-weight: 800; color: var(--neon-cyan);">#@item.OrderId</span></td>
+                                                <td>
+                                                    <div style="font-weight: 600;">@item.OrderDate.ToString("dd/MM/yyyy")</div>
+                                                    <small style="color: var(--text-sub);">@item.OrderDate.ToString("HH:mm")</small>
+                                                </td>
+                                                <td>
+                                                    @if (item.OrderDetails != null)
+                                                    {
+                                                        foreach (var prod in item.OrderDetails)
+                                                        {
+                                                            <div>@prod.ProductName <strong style="color: var(--neon-cyan);">× @prod.Quantity</strong></div>
+                                                        }
+                                                    }
+                                                </td>
+                                                <td><span style="color: #facc15; font-weight: 800;">@item.TotalAmount.ToString("N0") đ</span></td>
+                                                <td>
+                                                    <span class="order-status-badge-wrap">
+                                                        @if (item.Status == "Chờ xử lý")
+                                                        {
+                                                            <span class="status-badge status-pending">Chờ xử lý</span>
+                                                        }
+                                                        else if (item.Status == "Đang giao" || item.Status == "Đang giao hàng")
+                                                        {
+
+                                                            <span class="status-badge status-shipping">Đang giao hàng</span>
+                                                        }
+                                                        else if (item.Status == "Đã hoàn thành" || item.Status == "Hoàn thành")
+                                                        {
+
+                                                            <span class="status-badge status-completed">Đã hoàn thành</span>
+                                                        }
+                                                        else
+                                                        {
+
+                                                            <span class="status-badge status-cancelled">Đã hủy</span>
+                                                        }
+                                                    </span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span class="order-action-cell">
+                                                        @if (item.Status == "Chờ xử lý")
+                                                        {
+                                                            <button type="button" class="btn-cancel-order" onclick="cancelOrderAction(@item.OrderId)">Hủy đơn</button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button type="button" class="btn-dismiss-row" onclick="dismissOrderRow(@item.OrderId)">Ẩn</button>
+                                                        }
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-5">
+                                <h5>BẠN CHƯA CÓ ĐƠN HÀNG NÀO</h5>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- BẢNG 2: LỊCH SỬ MUA HÀNG -->
+                    <div id="historyTabContent" class="d-none">
+                        @if (purchasedItems.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="order-table-cyber">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã đơn</th>
+                                            <th>Ngày mua</th>
+                                            <th>Tên máy / Cấu hình</th>
+                                            <th>Số lượng</th>
+                                            <th>Thành tiền</th>
+                                            <th>Bảo hành</th>
+                                            <th class="text-end" style="width: 130px;">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var pItem in purchasedItems)
+                                        {
+                                            string historyKey = $"{pItem.OrderId}-{pItem.ProductId}";
+                                            <tr class="history-row-item" data-history-key="@historyKey">
+                                                <td><span style="font-family: 'Orbitron'; font-weight: 800; color: var(--neon-cyan);">#@pItem.OrderId</span></td>
+                                                <td>@pItem.OrderDate.ToString("dd/MM/yyyy")</td>
+                                                <td>@pItem.ProductName</td>
+                                                <td><strong style="color: var(--neon-cyan);">× @pItem.Quantity</strong></td>
+                                                <td><span style="color: #facc15; font-weight: 800;">@pItem.SubTotal.ToString("N0") đ</span></td>
+                                                <td><span class="status-badge status-completed">BH 36 tháng</span></td>
+                                                <td class="text-end">
+                                                    <div class="d-flex align-items-center justify-content-end gap-1">
+                                                        <a href="/Product/Detail/@pItem.ProductId" class="btn-rebuy-sm">Mua lại</a>
+                                                        <button type="button" class="btn-dismiss-row" onclick="dismissHistoryKey('@historyKey')">Ẩn</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-5">
+                                <h5>CHƯA CÓ LỊCH SỬ MUA HÀNG</h5>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const STORAGE_KEY_DISMISSED = 'bmdt_dismissed_orders_@Html.Raw(accountKey)';
+    const STORAGE_KEY_CANCELLED = 'bmdt_cancelled_orders_@Html.Raw(accountKey)';
+    const STORAGE_KEY_DISMISSED_HIST = 'bmdt_dismissed_history_@Html.Raw(accountKey)';
+    let currentTab = 'status';
+
+    function getDismissedOrderIds() { try { const r = localStorage.getItem(STORAGE_KEY_DISMISSED); return r ? JSON.parse(r) : []; } catch { return []; } }
+    function saveDismissedOrderIds(ids) { try { localStorage.setItem(STORAGE_KEY_DISMISSED, JSON.stringify(ids)); } catch { } }
+    function getCancelledOrderIds() { try { const r = localStorage.getItem(STORAGE_KEY_CANCELLED); return r ? JSON.parse(r) : []; } catch { return []; } }
+    function saveCancelledOrderIds(ids) { try { localStorage.setItem(STORAGE_KEY_CANCELLED, JSON.stringify(ids)); } catch { } }
+    function getDismissedHistoryKeys() { try { const r = localStorage.getItem(STORAGE_KEY_DISMISSED_HIST); return r ? JSON.parse(r) : []; } catch { return []; } }
+    function saveDismissedHistoryKeys(keys) { try { localStorage.setItem(STORAGE_KEY_DISMISSED_HIST, JSON.stringify(keys)); } catch { } }
+
+    function switchProfileTab(tabName) {
+        currentTab = tabName;
+        document.getElementById('tabStatusBtn').classList.toggle('active-tab', tabName === 'status');
+        document.getElementById('tabHistoryBtn').classList.toggle('active-tab', tabName === 'history');
+        document.getElementById('statusTabContent').classList.toggle('d-none', tabName !== 'status');
+        document.getElementById('historyTabContent').classList.toggle('d-none', tabName !== 'history');
+        document.getElementById('btnRestoreOrders').classList.toggle('d-none', tabName !== 'status' || getDismissedOrderIds().length === 0);
+        document.getElementById('btnRestoreHistory').classList.toggle('d-none', tabName !== 'history' || getDismissedHistoryKeys().length === 0);
+    }
+
+    function cancelOrderAction(orderId) {
+        if (confirm(`Bạn có chắc muốn hủy đơn hàng #${orderId} không?`)) {
+            const cancelledIds = getCancelledOrderIds();
+            if (!cancelledIds.includes(orderId)) {
+                cancelledIds.push(orderId);
+                saveCancelledOrderIds(cancelledIds);
+            }
+            const row = document.querySelector(`.order-row-item[data-order-id="${orderId}"]`);
+            if (row) {
+                row.setAttribute('data-status', 'Đã hủy');
+                const badgeWrap = row.querySelector('.order-status-badge-wrap');
+                if (badgeWrap) {
+                    badgeWrap.innerHTML = `<span class="status-badge status-cancelled">Đã hủy</span>`;
+                }
+                const actionCell = row.querySelector('.order-action-cell');
+                if (actionCell) {
+                    actionCell.innerHTML = `<button type="button" class="btn-dismiss-row" onclick="dismissOrderRow(${orderId})">Ẩn</button>`;
+                }
+            }
+        }
+    }
+
+    function dismissOrderRow(id) {
+        const ids = getDismissedOrderIds();
+        if (!ids.includes(id)) { ids.push(id); saveDismissedOrderIds(ids); }
+        const row = document.querySelector(`.order-row-item[data-order-id="${id}"]`);
+        if (row) row.classList.add('d-none');
+        switchProfileTab('status');
+    }
+
+    function restoreAllDismissedOrders() {
+        saveDismissedOrderIds([]);
+        document.querySelectorAll('.order-row-item').forEach(r => r.classList.remove('d-none'));
+        switchProfileTab('status');
+    }
+
+    function dismissHistoryKey(key) {
+        const keys = getDismissedHistoryKeys();
+        if (!keys.includes(key)) { keys.push(key); saveDismissedHistoryKeys(keys); }
+        const row = document.querySelector(`.history-row-item[data-history-key="${key}"]`);
+        if (row) row.classList.add('d-none');
+        switchProfileTab('history');
+    }
+
+    function restoreAllDismissedHistory() {
+        saveDismissedHistoryKeys([]);
+        document.querySelectorAll('.history-row-item').forEach(r => r.classList.remove('d-none'));
+        switchProfileTab('history');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        switchProfileTab('status');
+
+        // Khôi phục trạng thái hủy trên giao diện khi load trang
+        const cancelledIds = getCancelledOrderIds();
+        cancelledIds.forEach(id => {
+            const row = document.querySelector(`.order-row-item[data-order-id="${id}"]`);
+            if (row) {
+                const badgeWrap = row.querySelector('.order-status-badge-wrap');
+                if (badgeWrap) badgeWrap.innerHTML = `<span class="status-badge status-cancelled">Đã hủy</span>`;
+                const actionCell = row.querySelector('.order-action-cell');
+                if (actionCell) actionCell.innerHTML = `<button type="button" class="btn-dismiss-row" onclick="dismissOrderRow(${id})">Ẩn</button>`;
+            }
+        });
+
+        // Ẩn các dòng đã bị người dùng chọn ẩn trước đó
+        const dismissedIds = getDismissedOrderIds();
+        dismissedIds.forEach(id => {
+            const row = document.querySelector(`.order-row-item[data-order-id="${id}"]`);
+            if (row) row.classList.add('d-none');
+        });
+
+        const dismissedHistoryKeys = getDismissedHistoryKeys();
+        dismissedHistoryKeys.forEach(key => {
+            const row = document.querySelector(`.history-row-item[data-history-key="${key}"]`);
+            if (row) row.classList.add('d-none');
+        });
+    });
+</script>

@@ -1,0 +1,389 @@
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    var userJson = HttpContextAccessor.HttpContext?.Session.GetString(ComputerStore.Web.Controllers.AccountController.UserSessionKey);
+    var currentCustomer = !string.IsNullOrEmpty(userJson)
+        ? System.Text.Json.JsonSerializer.Deserialize<ComputerStore.Web.Models.ProfileViewModel>(userJson)
+        : null;
+
+    // Xác định Session key giỏ hàng khớp với Controller
+    string cartKey = "Cart_Guest";
+    if (currentCustomer != null && !string.IsNullOrWhiteSpace(currentCustomer.PhoneNumber))
+    {
+        cartKey = $"Cart_{currentCustomer.PhoneNumber.Trim()}";
+    }
+
+    // Đọc giỏ hàng từ Session để tính tổng số lượng sản phẩm
+    int cartCount = 0;
+    var cartJson = HttpContextAccessor.HttpContext?.Session.GetString(cartKey);
+    if (!string.IsNullOrEmpty(cartJson))
+    {
+        try
+        {
+            var cartItems = System.Text.Json.JsonSerializer.Deserialize<List<ComputerStore.Web.Models.CartItem>>(cartJson);
+            if (cartItems != null)
+            {
+                foreach (var item in cartItems)
+                {
+                    // Lấy số lượng từ item (hỗ trợ linh hoạt tên thuộc tính Quantity)
+                    var qProp = item.GetType().GetProperty("Quantity");
+                    int qty = qProp != null ? Convert.ToInt32(qProp.GetValue(item) ?? 1) : 1;
+                    cartCount += qty;
+                }
+            }
+        }
+        catch { }
+    }
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>@ViewData["Title"] - BMDTStore Hệ Thống Máy Tính Cao Cấp</title>
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235df2d6'><path d='M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z'/></svg>" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+    <style>
+        :root {
+            --bg-dark: #080c0d;
+            --card-dark: #0e1516;
+            --card-border: #1e453e;
+            --neon-cyan: #5df2d6;
+            --neon-glow: rgba(93, 242, 214, 0.35);
+            --text-main: #f8fafc;
+            --text-sub: #cbd5e1;
+            --text-accent: #6ee7b7;
+            --font-family-base: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-family-base);
+            font-size: 1rem;
+            line-height: 1.6;
+            letter-spacing: -0.01em;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1, h2, h3, h4, h5, h6, .brand-font {
+            font-family: var(--font-family-base);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+        }
+
+        .top-cyber-bar {
+            background: #040607;
+            border-bottom: 1px solid #142e28;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .navbar-cyber {
+            background: rgba(8, 12, 13, 0.96);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .navbar-brand-cyber {
+            color: var(--neon-cyan) !important;
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-shadow: 0 0 12px var(--neon-glow);
+            letter-spacing: -0.02em;
+            text-decoration: none;
+        }
+
+        .form-control, .form-select, input[type="text"], input[type="password"], input[type="tel"], textarea {
+            font-family: var(--font-family-base) !important;
+            background-color: #131d1f !important;
+            border: 1.5px solid #234842 !important;
+            color: #ffffff !important;
+            font-size: 0.98rem !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            padding: 11px 15px !important;
+            transition: all 0.25s ease-in-out;
+        }
+
+            .form-control::placeholder, textarea::placeholder {
+                color: #94a3b8 !important;
+                font-weight: 400 !important;
+                opacity: 0.85;
+            }
+
+            .form-control:focus, textarea:focus, .form-select:focus {
+                background-color: #1a2a2d !important;
+                border-color: var(--neon-cyan) !important;
+                box-shadow: 0 0 12px rgba(93, 242, 214, 0.4) !important;
+                color: #ffffff !important;
+                outline: none !important;
+            }
+
+        .form-label {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--neon-cyan) !important;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-cyber-user {
+            border: 1px solid var(--card-border);
+            background: rgba(20, 31, 33, 0.8);
+            color: var(--neon-cyan) !important;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border-radius: 8px;
+            transition: all 0.25s;
+        }
+
+            .btn-cyber-user:hover {
+                border-color: var(--neon-cyan);
+                box-shadow: 0 0 10px var(--neon-glow);
+            }
+
+        .dropdown-menu-cyber {
+            background-color: #0e1516;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+        }
+
+            .dropdown-menu-cyber .dropdown-item {
+                color: #cce3de;
+                font-size: 0.95rem;
+                font-weight: 600;
+                padding: 10px 18px;
+                transition: 0.2s;
+            }
+
+                .dropdown-menu-cyber .dropdown-item:hover {
+                    background-color: #142826;
+                    color: var(--neon-cyan);
+                }
+
+        .btn-cyber-cart {
+            border: 1.5px solid var(--neon-cyan);
+            background: rgba(93, 242, 214, 0.12);
+            color: var(--neon-cyan) !important;
+            font-size: 0.92rem;
+            font-weight: 700;
+            border-radius: 8px;
+            transition: all 0.25s;
+            position: relative;
+        }
+
+            .btn-cyber-cart:hover {
+                background: var(--neon-cyan);
+                color: #000000 !important;
+                box-shadow: 0 0 15px var(--neon-glow);
+            }
+
+        /* HUY HIỆU SỐ LƯỢNG GIỎ HÀNG (BADGE) */
+        .cart-badge {
+            position: absolute;
+            top: -7px;
+            right: -7px;
+            background: #facc15;
+            color: #080c0d;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 10px;
+            box-shadow: 0 0 8px rgba(250, 204, 21, 0.6);
+        }
+
+        .footer-cyber {
+            background: #040607;
+            border-top: 1px solid #16332c;
+            color: #cbd5e1;
+            margin-top: auto;
+        }
+
+            .footer-cyber a {
+                color: #94a3b8;
+                text-decoration: none;
+            }
+
+                .footer-cyber a:hover {
+                    color: var(--neon-cyan);
+                }
+
+        @@media (max-width: 768px) {
+            body {
+                font-size: 0.95rem;
+            }
+
+            .container {
+                padding-left: 14px !important;
+                padding-right: 14px !important;
+            }
+
+            h1, .display-4 {
+                font-size: 1.6rem !important;
+            }
+
+            h2 {
+                font-size: 1.35rem !important;
+            }
+
+            h3 {
+                font-size: 1.2rem !important;
+            }
+
+            .navbar-collapse {
+                background: #0e1516;
+                padding: 16px;
+                border-radius: 10px;
+                border: 1px solid var(--card-border);
+                margin-top: 12px;
+            }
+
+            .nav-mobile-group {
+                flex-direction: column;
+                width: 100%;
+                gap: 10px !important;
+            }
+
+                .nav-mobile-group .btn,
+                .nav-mobile-group .dropdown,
+                .nav-mobile-group .dropdown-toggle {
+                    width: 100% !important;
+                    justify-content: center;
+                    padding: 12px !important;
+                }
+
+            .table-responsive {
+                border-radius: 8px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-cyber-bar py-1 d-none d-md-block">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div>
+                <span class="me-3"><i class="bi bi-cpu text-info me-1"></i> BMDTStore HARDWARE ECOSYSTEM</span>
+                <span><i class="bi bi-shield-check text-success me-1"></i> BẢO HÀNH CHÍNH HÃNG 100%</span>
+            </div>
+            <div>
+                <span class="me-3"><i class="bi bi-telephone-fill text-danger me-1"></i> HOTLINE: 1800 6868</span>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-cyber sticky-top py-2 py-md-3">
+        <div class="container">
+            <a class="navbar-brand navbar-brand-cyber d-flex align-items-center" asp-controller="Product" asp-action="Index">
+                <i class="bi bi-gpu-card fs-3 me-2"></i>
+                <span>BMDT<span class="text-white">STORE</span></span>
+            </a>
+
+            <button class="navbar-toggler border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#navContent" aria-controls="navContent" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="bi bi-list text-light fs-2"></i>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navContent">
+                <div class="d-flex align-items-center gap-3 ms-auto nav-mobile-group">
+                    @if (currentCustomer != null)
+                    {
+                        <div class="dropdown">
+                            <button class="btn btn-cyber-user px-3 py-2 dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-check-fill text-success fs-5 me-2"></i>
+                                <span>@(currentCustomer.FullName.Length > 18 ? currentCustomer.FullName.Substring(0, 18) + "..." : currentCustomer.FullName)</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-cyber dropdown-menu-end mt-2" style="min-width: 210px; padding: 6px;">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2 px-3 rounded-2" asp-controller="Account" asp-action="Profile" style="font-size: 0.9rem;">
+                                        <i class="bi bi-person-gear me-2 text-info fs-6"></i> Thông tin cá nhân
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2 px-3 rounded-2" asp-controller="Account" asp-action="Orders" style="font-size: 0.9rem;">
+                                        <i class="bi bi-box-seam me-2 text-warning fs-6"></i> Thông tin đơn hàng
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1" style="border-color: #1e453e;"></li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2 px-3 rounded-2 text-danger" asp-controller="Account" asp-action="Logout" onclick="return confirm('Bạn có chắc muốn đăng xuất?');" style="font-size: 0.9rem;">
+                                        <i class="bi bi-box-arrow-right me-2 fs-6"></i> Đăng xuất
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-cyber-user px-3 py-2 d-flex align-items-center">
+                            <i class="bi bi-person-circle fs-5 me-2"></i>
+                            <span>ĐĂNG NHẬP</span>
+                        </a>
+                    }
+
+                    <!-- NÚT GIỎ HÀNG KÈM HUY HIỆU SỐ LƯỢNG SẢN PHẨM -->
+                    <a asp-controller="Cart" asp-action="Index" class="btn btn-cyber-cart px-3 py-2 d-flex align-items-center">
+                        <i class="bi bi-cart3 fs-5 me-2"></i>
+                        <span>GIỎ HÀNG</span>
+                        @if (cartCount > 0)
+                        {
+                            <span class="cart-badge">@cartCount</span>
+                        }
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main role="main" class="pb-5">
+        @RenderBody()
+    </main>
+
+    <footer class="footer-cyber pt-5 pb-3">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-5">
+                    <h5 class="navbar-brand-cyber mb-3"><i class="bi bi-gpu-card me-2"></i> BMDTStore SYSTEM</h5>
+                    <p class="small opacity-75">Hệ thống phân phối Laptop Gaming, PC Modding và linh kiện phần cứng công nghệ cao.</p>
+                    <p class="small mb-1"><i class="bi bi-geo-alt me-2 text-info"></i> 273 An Dương Vương, Phường 3, Quận 5, TP.HCM</p>
+                </div>
+                <div class="col-md-3 col-6">
+                    <h6 class="text-white fw-bold mb-3 text-uppercase">Dịch Vụ</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="#">Bảo hành tận nơi</a></li>
+                        <li class="mb-2"><a href="#">Đổi mới 30 ngày</a></li>
+                        <li class="mb-2"><a href="#">Tư vấn cấu hình máy</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-6">
+                    <h6 class="text-white fw-bold mb-3 text-uppercase">Thanh Toán & Giao Hàng</h6>
+                    <p class="small opacity-75">Giao hàng hỏa tốc trong ngày. Hỗ trợ COD tận nơi, chuyển khoản QR Banking và trả góp 0% lãi suất.</p>
+                </div>
+            </div>
+            <hr style="border-color: #1a3c35;" class="my-4" />
+            <div class="text-center small opacity-50">
+                © 2026 BMDTStore COMPUTER SYSTEM. TOÀN BỘ BẢN QUYỀN ĐƯỢC BẢO LƯU.
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
