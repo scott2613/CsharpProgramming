@@ -1,0 +1,12 @@
+const navLinks=[...document.querySelectorAll('nav a')];const sections=[...document.querySelectorAll('main section')];
+const menu=document.querySelector('#menu');menu.addEventListener('click',()=>{const open=document.body.classList.toggle('menu-open');menu.setAttribute('aria-expanded',String(open));});
+navLinks.forEach(a=>a.addEventListener('click',()=>{document.body.classList.remove('menu-open');menu.setAttribute('aria-expanded','false');}));
+const obs=new IntersectionObserver(entries=>{const candidates=entries.filter(e=>e.isIntersecting);if(!candidates.length)return;const id=candidates.sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0].target.id;navLinks.forEach(a=>a.classList.toggle('active',a.hash==='#'+id));},{rootMargin:'-90px 0px -68% 0px'});sections.forEach(s=>obs.observe(s));
+function normalize(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/đ/g,'d');}
+const input=document.querySelector('#search'),results=document.querySelector('#results');input.addEventListener('input',()=>{const q=normalize(input.value.trim());results.replaceChildren();results.hidden=!q;if(!q)return;let found=sections.filter(s=>normalize(s.innerText).includes(q));if(!found.length){results.textContent='Không tìm thấy mục phù hợp.';return;}found.forEach(s=>{const a=document.createElement('a');a.href='#'+s.id;a.textContent=s.dataset.title;a.onclick=()=>{results.hidden=true;input.value='';};results.append(a);});});
+input.addEventListener('keydown',e=>{if(e.key==='Escape')results.hidden=true;if(e.key==='Enter'){const a=results.querySelector('a');if(a)a.click();}});document.addEventListener('click',e=>{if(!e.target.closest('.search'))results.hidden=true;});
+const viewer=document.querySelector('#viewer');document.querySelectorAll('.zoom-image').forEach(btn=>btn.addEventListener('click',()=>{const src=btn.querySelector('img'),img=viewer.querySelector('img');img.src=src.src;img.alt=src.alt;viewer.showModal();}));document.querySelector('#close-viewer').onclick=()=>viewer.close();viewer.addEventListener('click',e=>{if(e.target===viewer)viewer.close();});
+
+// detailed specification navigation
+function revealHash(){const id=decodeURIComponent(location.hash.slice(1));if(!id)return;const el=document.getElementById(id);if(!el)return;let d=el.matches('details')?el:el.closest('details');if(d)d.open=true;}
+window.addEventListener('hashchange',revealHash);revealHash();
