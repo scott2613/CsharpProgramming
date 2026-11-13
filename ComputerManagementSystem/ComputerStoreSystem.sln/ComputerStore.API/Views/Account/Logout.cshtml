@@ -1,0 +1,14 @@
+﻿@{
+    ViewData["Title"] = "ĐĂNG XUẤT";
+}
+@await Html.PartialAsync("_AccountLegacyStyles")
+<div class="container py-4 store-auth-scope">
+    <div class="auth-card">
+        <div class="auth-heading"><h2>ĐĂNG XUẤT</h2></div>
+        <p style="color: var(--text-sub); text-align:center;">Bạn có chắc chắn muốn đăng xuất tài khoản?</p>
+        <form action="@Url.Action("Logout", "Account")" method="post">
+            @Html.AntiForgeryToken()
+            <div class="auth-actions"><a asp-controller="Account" asp-action="Profile" class="btn-cancel">HỦY</a><button type="submit" class="btn-update">ĐĂNG XUẤT</button></div>
+        </form>
+    </div>
+</div>

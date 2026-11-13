@@ -1,0 +1,26 @@
+﻿<script>
+    (() => {
+        document.querySelectorAll('.store-auth-scope [data-password-target]').forEach(button => {
+            button.addEventListener('click', () => {
+                const input = document.getElementById(button.dataset.passwordTarget);
+                if (!input) return;
+                const show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                button.setAttribute('aria-pressed', show ? 'true' : 'false');
+                button.setAttribute('aria-label', show ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+                const icon = button.querySelector('i');
+                if (icon) icon.className = show ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill';
+            });
+        });
+        document.querySelectorAll('.store-auth-scope [data-password-confirm]').forEach(confirmation => {
+            const password = document.getElementById(confirmation.dataset.passwordConfirm);
+            if (!password) return;
+            const update = () => confirmation.setCustomValidity(
+                confirmation.value && confirmation.value !== password.value
+                    ? 'Mật khẩu xác nhận không khớp.' : '');
+            password.addEventListener('input', update);
+            confirmation.addEventListener('input', update);
+            update();
+        });
+    })();
+</script>

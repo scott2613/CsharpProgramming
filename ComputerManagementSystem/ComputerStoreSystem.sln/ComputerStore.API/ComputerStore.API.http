@@ -1,6 +1,12 @@
-@ComputerStore.API_HostAddress = http://localhost:5293
+@ComputerStore_API = https://localhost:7275
 
-GET {{ComputerStore.API_HostAddress}}/weatherforecast/
+GET {{ComputerStore_API}}/api/products/paged?page=1&pageSize=8
 Accept: application/json
 
 ###
+GET {{ComputerStore_API}}/api/categories
+Accept: application/json
+
+### Chưa đăng nhập phải trả 401, không trả toàn bộ dữ liệu tài khoản.
+GET {{ComputerStore_API}}/api/users/me
+Accept: application/json

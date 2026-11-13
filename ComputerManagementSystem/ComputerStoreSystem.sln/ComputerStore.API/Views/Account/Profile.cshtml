@@ -1,0 +1,374 @@
+﻿@model ComputerStore.API.Models.ProfileViewModel
+@{
+    ViewData["Title"] = "Thông tin cá nhân - BMDTStore";
+}
+
+<style>
+    :root {
+        --bg-dark: #080c0d;
+        --card-dark: #0e1516;
+        --card-inner: #141f21;
+        --card-border: #1e453e;
+        --neon-cyan: #5df2d6;
+        --neon-glow: rgba(93, 242, 214, 0.25);
+        --text-sub: #8da4a4;
+    }
+
+    body {
+        background-color: var(--bg-dark) !important;
+        color: #ffffff;
+        font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+    }
+
+    /* NÚT QUAY LẠI TRÒN CÓ MŨI TÊN QUAY NGƯỢC BÊN TRÁI */
+    .btn-back-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(93, 242, 214, 0.08);
+        border: 1.5px solid var(--neon-cyan);
+        color: var(--neon-cyan);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 19px;
+        transition: all 0.25s ease;
+        box-shadow: 0 0 10px rgba(93, 242, 214, 0.15);
+        flex-shrink: 0;
+    }
+
+        .btn-back-circle:hover {
+            background: var(--neon-cyan);
+            color: #080c0d;
+            box-shadow: 0 0 16px var(--neon-glow);
+            transform: scale(1.08);
+        }
+
+    .profile-card {
+        background-color: var(--card-dark);
+        border: 1px solid var(--card-border);
+        border-radius: 14px;
+        padding: 32px;
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+        transition: border-color 0.25s ease;
+    }
+
+        .profile-card:hover {
+            border-color: rgba(93, 242, 214, 0.4);
+        }
+
+    .form-control-cyber {
+        background-color: var(--card-inner) !important;
+        border: 1.5px solid var(--card-border) !important;
+        color: #ffffff !important;
+        border-radius: 8px;
+        padding: 12px 16px;
+        width: 100%;
+        margin-bottom: 18px;
+        outline: none;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+        .form-control-cyber:focus {
+            border-color: var(--neon-cyan) !important;
+            box-shadow: 0 0 12px var(--neon-glow) !important;
+            background-color: #162628 !important;
+        }
+
+    .form-label-cyber {
+        color: var(--text-sub);
+        font-size: 0.88rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+        display: block;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+    }
+
+    .btn-update {
+        background: linear-gradient(135deg, #00796b, #004d40);
+        border: 1.5px solid var(--neon-cyan);
+        color: #fff;
+        font-weight: 700;
+        padding: 12px 28px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.98rem;
+        letter-spacing: 0.5px;
+    }
+
+        .btn-update:hover {
+            background: var(--neon-cyan);
+            color: #080c0d;
+            box-shadow: 0 0 16px var(--neon-glow);
+            transform: translateY(-2px);
+        }
+
+    .btn-logout {
+        border: 1px solid #f87171;
+        color: #f87171;
+        background: transparent;
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 13.5px;
+        font-weight: 700;
+        transition: 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+        .btn-logout:hover {
+            background: rgba(248, 113, 113, 0.2);
+            color: #ff9999;
+        }
+
+    /* NÚT THAY ĐỔI MẬT KHẨU / CÀI ĐẶT TRONG BOX */
+    .btn-cyber-pwd {
+        background: rgba(93, 242, 214, 0.06);
+        border: 1.5px solid var(--card-border);
+        color: var(--neon-cyan);
+        font-weight: 700;
+        padding: 11px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 0.92rem;
+        letter-spacing: 0.5px;
+        width: 100%;
+        text-decoration: none;
+    }
+
+        .btn-cyber-pwd:hover {
+            background: rgba(93, 242, 214, 0.15);
+            border-color: var(--neon-cyan);
+            color: #ffffff;
+            box-shadow: 0 0 12px var(--neon-glow);
+        }
+
+    /* GIAO DIỆN MODAL POPUP CYBERPUNK */
+    .modal-content-cyber {
+        background-color: var(--card-dark) !important;
+        border: 1.5px solid var(--neon-cyan) !important;
+        border-radius: 14px;
+        box-shadow: 0 0 35px rgba(93, 242, 214, 0.25) !important;
+        color: #ffffff;
+    }
+
+    .modal-header-cyber {
+        border-bottom: 1px solid var(--card-border);
+        padding: 20px 24px;
+    }
+
+    .password-wrapper-cyber {
+        position: relative;
+        display: flex;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+        .password-wrapper-cyber input {
+            margin-bottom: 0 !important;
+            padding-right: 48px;
+        }
+
+    .btn-eye-cyber {
+        position: absolute;
+        right: 12px;
+        background: transparent;
+        border: none;
+        color: var(--neon-cyan) !important;
+        cursor: pointer;
+        font-size: 1.25rem;
+    }
+
+    .validation-err {
+        color: #ff5370;
+        font-size: 12.5px;
+        margin-top: -12px;
+        margin-bottom: 12px;
+        display: block;
+    }
+</style>
+
+<div class="container py-4" style="max-width: 1050px;">
+    <!-- TIÊU ĐỀ & NÚT TRÒN QUAY LẠI BÊN TRÁI -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-3">
+            <a href="/Product" class="btn-back-circle" title="Tiếp tục mua sắm">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h2 style="color: var(--neon-cyan); font-weight: 800; margin: 0; letter-spacing: -0.02em; font-size: 1.7rem;">
+                    <i class="bi bi-person-gear me-2"></i>THÔNG TIN CÁ NHÂN
+                </h2>
+                <small style="color: var(--text-sub); font-size: 0.95rem;">Quản lý hồ sơ tài khoản và địa chỉ giao nhận mặc định tại BMDTStore</small>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="/Account/Orders" style="border: 1px solid var(--card-border); color: var(--neon-cyan); padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 13.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="bi bi-box-seam"></i> Xem đơn hàng
+            </a>
+            <a href="/Account/Logout" class="btn-logout" onclick="return confirm('Bạn có chắc muốn đăng xuất tài khoản?');">
+                <i class="bi bi-box-arrow-right"></i> Đăng xuất
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success py-2 mb-4 d-flex align-items-center gap-2" style="background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #6ee7b7; border-radius: 10px;">
+            <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- 1. THẺ THÔNG TIN TÓM TẮT TÀI KHOẢN -->
+        <div class="col-lg-4">
+            <div class="profile-card text-center h-100 d-flex flex-column justify-content-between align-items-center py-4">
+                <div class="w-100 d-flex flex-column align-items-center">
+                    <div style="width: 86px; height: 86px; border-radius: 50%; background: #142826; border: 2px solid var(--neon-cyan); display: flex; align-items: center; justify-content: center; font-size: 36px; margin-bottom: 16px; box-shadow: 0 0 18px var(--neon-glow);">
+                        👤
+                    </div>
+                    <h4 style="color: #ffffff; font-weight: 700; margin-bottom: 6px; font-size: 1.3rem;">@Model?.FullName</h4>
+                    <div style="color: var(--neon-cyan); font-size: 12.5px; font-weight: 700; margin-bottom: 16px; letter-spacing: 0.5px;">
+                        <i class="bi bi-shield-fill-check me-1"></i> KHÁCH HÀNG THÂN THIẾT
+                    </div>
+                    <hr style="border-color: var(--card-border); width: 100%; margin: 8px 0 18px 0;" />
+                    <div class="text-start w-100 px-2" style="font-size: 0.92rem; color: var(--text-sub); line-height: 2.1;">
+                        <div>📱 SĐT: <b style="color: #ffffff;">@Model?.PhoneNumber</b></div>
+                        <div>✉️ Email: <b style="color: #ffffff;">@(string.IsNullOrEmpty(Model?.Email) ? "Chưa cập nhật" : Model.Email)</b></div>
+                        <div>📍 Khu vực: <b style="color: #ffffff;">@(string.IsNullOrEmpty(Model?.Address) ? "Chưa cập nhật" : Model.Address)</b></div>
+                    </div>
+                </div>
+
+                <!-- NÚT CÀI ĐẶT / ĐỔI MẬT KHẨU NGAY TRONG BOX -->
+                <div class="w-100 pt-4 mt-3 border-top" style="border-color: var(--card-border) !important;">
+                    <button type="button" class="btn-cyber-pwd" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <i class="bi bi-shield-lock-fill"></i> THAY ĐỔI MẬT KHẨU
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. FORM CẬP NHẬT THÔNG TIN CÁ NHÂN -->
+        <div class="col-lg-8">
+            <div class="profile-card h-100">
+                <h5 style="color: var(--neon-cyan); font-weight: 700; margin-bottom: 22px; font-size: 1.15rem;">
+                    <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa hồ sơ tài khoản
+                </h5>
+                <form asp-action="Profile" method="post">
+                    <div asp-validation-summary="ModelOnly" class="validation-err" role="alert"></div>
+                    <input type="hidden" asp-for="CustomerId" />
+                    <input type="hidden" asp-for="Username" />
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label-cyber">Họ và tên</label>
+                            <input asp-for="FullName" class="form-control-cyber" placeholder="Nhập họ và tên..." required />
+                            <span asp-validation-for="FullName" class="validation-err"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-cyber">Số điện thoại</label>
+                            <input asp-for="PhoneNumber" class="form-control-cyber" placeholder="Nhập số điện thoại..." required />
+                            <span asp-validation-for="PhoneNumber" class="validation-err"></span>
+                        </div>
+                    </div>
+
+                    <label class="form-label-cyber">Địa chỉ Email</label>
+                    <input asp-for="Email" class="form-control-cyber" placeholder="Nhập email..." />
+                    <span asp-validation-for="Email" class="validation-err"></span>
+
+                    <label class="form-label-cyber">Địa chỉ nhận hàng mặc định</label>
+                    <textarea asp-for="Address" class="form-control-cyber" rows="3" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..." required></textarea>
+                    <span asp-validation-for="Address" class="validation-err"></span>
+
+                    <div class="mt-2">
+                        <button type="submit" class="btn-update">
+                            <i class="bi bi-save2-fill"></i> LƯU THAY ĐỔI
+                        </button>
+                        <a asp-action="Profile" class="btn-cyber-pwd">Làm mới</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL THAY ĐỔI MẬT KHẨU CYBERPUNK -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-cyber">
+            <div class="modal-header modal-header-cyber d-flex justify-content-between align-items-center">
+                <h5 class="modal-title fw-bold" id="changePasswordModalLabel" style="color: var(--neon-cyan); letter-spacing: 0.5px;">
+                    <i class="bi bi-shield-lock me-2"></i>THAY ĐỔI MẬT KHẨU
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Account" asp-action="ChangePassword" method="post">
+                <div class="modal-body p-4">
+                    <label class="form-label-cyber">Mật khẩu hiện tại</label>
+                    <div class="password-wrapper-cyber">
+                        <input name="OldPassword" id="modalOldPass" type="password" class="form-control-cyber" placeholder="Nhập mật khẩu đang dùng" required />
+                        <button type="button" class="btn-eye-cyber" onclick="togglePasswordVisibility('modalOldPass', 'eyeIconOld')">
+                            <i id="eyeIconOld" class="bi bi-eye-fill"></i>
+                        </button>
+                    </div>
+
+                    <label class="form-label-cyber">Mật khẩu mới</label>
+                    <div class="password-wrapper-cyber">
+                        <input name="NewPassword" id="modalNewPass" type="password" class="form-control-cyber" placeholder="Tối thiểu 8 ký tự" required />
+                        <button type="button" class="btn-eye-cyber" onclick="togglePasswordVisibility('modalNewPass', 'eyeIconNew')">
+                            <i id="eyeIconNew" class="bi bi-eye-fill"></i>
+                        </button>
+                    </div>
+
+                    <label class="form-label-cyber">Xác nhận mật khẩu mới</label>
+                    <div class="password-wrapper-cyber">
+                        <input name="ConfirmPassword" id="modalConfirmPass" type="password" class="form-control-cyber" placeholder="Nhập lại mật khẩu mới" required />
+                        <button type="button" class="btn-eye-cyber" onclick="togglePasswordVisibility('modalConfirmPass', 'eyeIconConfirm')">
+                            <i id="eyeIconConfirm" class="bi bi-eye-fill"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer border-top p-3" style="border-color: var(--card-border) !important;">
+                    <button type="button" class="btn btn-outline-secondary px-3" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn-update">
+                        <i class="bi bi-check-lg"></i> XÁC NHẬN ĐỔI
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePasswordVisibility(inputId, iconId) {
+        var input = document.getElementById(inputId);
+        var icon = document.getElementById(iconId);
+        if (input.type === "password") {
+            input.type = "text";
+            icon.className = "bi bi-eye-slash-fill";
+        } else {
+            input.type = "password";
+            icon.className = "bi bi-eye-fill";
+        }
+    }
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
