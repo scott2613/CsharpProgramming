@@ -22,6 +22,8 @@ namespace ComputerStore.Admin.Services
         public ApiService() { }
         public static UserDto? CurrentUser { get; private set; }
         public string? LastError { get; private set; }
+
+        // lấy base url từ biến môi trường, ko có thì dùng mặc định localhost
         private static string NormalizeBaseUrl()
         {
             var value = Environment.GetEnvironmentVariable("COMPUTERSTORE_API_BASEURL") ?? "https://localhost:7275/api/";
@@ -29,6 +31,8 @@ namespace ComputerStore.Admin.Services
                 throw new InvalidOperationException("COMPUTERSTORE_API_BASEURL không hợp lệ.");
             return uri.AbsoluteUri.TrimEnd('/') + "/";
         }
+
+        // chuẩn hóa đường dẫn ảnh (xử lý link tương đối và link cdn tgdd)
         public static string? ResolveImageUrl(string? value)
         {
             if (string.IsNullOrWhiteSpace(value)) return null;
@@ -60,6 +64,9 @@ namespace ComputerStore.Admin.Services
         }
         public static HttpClient CreateHttpClient() => new(new AccountHttpHandler(Cookies))
         { BaseAddress = new Uri(BaseUrl), Timeout = TimeSpan.FromSeconds(30) };
+
+
+        // đăng nhập và check quyền Admin
         public async Task<bool> LoginAsync(string username, string password)
         {
             LastError = null;
@@ -81,6 +88,8 @@ namespace ComputerStore.Admin.Services
             catch (TaskCanceledException) { LastError = "API phản hồi quá thời gian chờ."; return false; }
             catch (JsonException) { LastError = "Phản hồi API không đúng JSON. Kiểm tra URL API và phiên bản backend."; return false; }
         }
+
+        // đăng xuất và xóa cookie phiên hiện tại
         public async Task LogoutAsync()
         {
             try
