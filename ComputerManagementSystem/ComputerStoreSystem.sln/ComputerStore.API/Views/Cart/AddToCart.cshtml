@@ -1,0 +1,19 @@
+﻿@model ComputerStore.API.Models.CartAddViewModel
+@{
+    ViewData["Title"] = "Xác nhận thêm vào giỏ";
+}
+<div class="container py-4">
+    <div style="max-width:520px;margin:30px auto;padding:28px;background:#0e1516;border:1px solid #1e453e;border-radius:12px;color:white;">
+        <h3 style="color:#5df2d6;">@(Model.BuyNow ? "Xác nhận mua ngay" : "Thêm vào giỏ hàng")</h3>
+        <p>@Model.ProductName</p>
+        <p>Số lượng: <strong>@Model.Quantity</strong></p>
+        <form action="@Url.Action("AddToCart", "Cart")" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="productId" value="@Model.ProductId" />
+            <input type="hidden" name="quantity" value="@Model.Quantity" />
+            <input type="hidden" name="buyNow" value="@Model.BuyNow.ToString().ToLowerInvariant()" />
+            <button type="submit" style="background:#00796b;color:white;border:1px solid #5df2d6;border-radius:6px;padding:10px 20px;">Xác nhận</button>
+            <a href="@(Model.ReturnUrl ?? Url.Action("Index", "Product"))" style="color:#5df2d6;margin-left:16px;">Quay lại</a>
+        </form>
+    </div>
+</div>

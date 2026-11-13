@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ComputerStore.Application\ComputerStore.Application.csproj" />
     <ProjectReference Include="..\ComputerStore.Core\ComputerStore.Core.csproj" />
   </ItemGroup>
 

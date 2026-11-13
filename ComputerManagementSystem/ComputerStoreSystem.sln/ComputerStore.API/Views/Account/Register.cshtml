@@ -1,0 +1,54 @@
+﻿@model ComputerStore.API.Models.RegisterViewModel
+@{
+    ViewData["Title"] = "Đăng ký thành viên - DTBStore";
+}
+@await Html.PartialAsync("_AccountLegacyStyles")
+
+<div class="container py-4 store-auth-scope auth-register">
+    <div class="auth-card">
+        <div class="text-center mb-4 auth-heading">
+            <h2>⚡ ĐĂNG KÝ TÀI KHOẢN</h2>
+            <p>Gia nhập cộng đồng người dùng phần cứng công nghệ cao DTBStore</p>
+        </div>
+        <div asp-validation-summary="ModelOnly" class="alert-cyber-danger" role="alert"></div>
+        <form action="@Url.Action("Register", "Account")" method="post">
+            @Html.AntiForgeryToken()
+            <label asp-for="FullName" class="form-label-cyber">Họ và tên của bạn</label>
+            <input asp-for="FullName" class="form-control-cyber" placeholder="Nguyễn Văn A" required autocomplete="name" />
+            <span asp-validation-for="FullName" class="validation-text"></span>
+
+            <div class="row auth-fields-row" style="--bs-gutter-x:0;">
+                <div class="col-md-6">
+                    <label asp-for="PhoneNumber" class="form-label-cyber">Số điện thoại</label>
+                    <input asp-for="PhoneNumber" class="form-control-cyber" placeholder="0912345678" required autocomplete="tel" />
+                    <span asp-validation-for="PhoneNumber" class="validation-text"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label-cyber">Địa chỉ Email</label>
+                    <input asp-for="Email" type="email" class="form-control-cyber" placeholder="email@gmail.com" required autocomplete="email" />
+                    <span asp-validation-for="Email" class="validation-text"></span>
+                </div>
+            </div>
+            <label asp-for="Address" class="form-label-cyber">Địa chỉ nhận hàng mặc định</label>
+            <textarea asp-for="Address" class="form-control-cyber" rows="2" placeholder="Số nhà, tên đường, phường/xã, quận/huyện..." required autocomplete="street-address"></textarea>
+            <span asp-validation-for="Address" class="validation-text"></span>
+
+            <div class="row auth-fields-row" style="--bs-gutter-x:0;">
+                <div class="col-md-6">
+                    <label asp-for="Password" class="form-label-cyber">Mật khẩu</label>
+                    <input asp-for="Password" type="password" class="form-control-cyber" placeholder="Tối thiểu 8 ký tự" required minlength="8" maxlength="128" autocomplete="new-password" />
+                    <span asp-validation-for="Password" class="validation-text"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ConfirmPassword" class="form-label-cyber">Xác nhận mật khẩu</label>
+                    <input asp-for="ConfirmPassword" type="password" class="form-control-cyber" placeholder="Nhập lại mật khẩu" required autocomplete="new-password" data-password-confirm="Password" />
+                    <span asp-validation-for="ConfirmPassword" class="validation-text"></span>
+                </div>
+            </div>
+            <button type="submit" class="btn-auth">TẠO TÀI KHOẢN NGAY</button>
+        </form>
+        <div class="text-center mt-3 auth-bottom">
+            Đã có tài khoản? <a asp-controller="Account" asp-action="Login" class="auth-link">Đăng nhập tại đây</a>
+        </div>
+    </div>
+</div>

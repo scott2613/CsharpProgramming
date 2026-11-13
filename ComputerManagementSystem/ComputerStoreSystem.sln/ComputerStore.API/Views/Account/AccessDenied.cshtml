@@ -1,0 +1,11 @@
+﻿@{
+    ViewData["Title"] = "KHÔNG CÓ QUYỀN TRUY CẬP";
+}
+@await Html.PartialAsync("_AccountLegacyStyles")
+<div class="container py-4 store-auth-scope">
+    <div class="auth-card">
+        <div class="auth-heading"><h2>KHÔNG CÓ QUYỀN TRUY CẬP</h2></div>
+        <div class="alert-cyber-warning">Tài khoản hiện tại không được phép thực hiện chức năng này.</div>
+        <div class="auth-bottom"><a asp-controller="Product" asp-action="Index" class="auth-link">← Quay lại cửa hàng</a></div>
+    </div>
+</div>

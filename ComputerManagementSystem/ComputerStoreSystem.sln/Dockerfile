@@ -1,26 +1,18 @@
-# Stage 1: Build Web và API
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
-
+COPY ComputerStore.Core/ComputerStore.Core.csproj ComputerStore.Core/
+COPY ComputerStore.Application/ComputerStore.Application.csproj ComputerStore.Application/
+COPY ComputerStore.Infrastructure/ComputerStore.Infrastructure.csproj ComputerStore.Infrastructure/
+COPY ComputerStore.API/ComputerStore.API.csproj ComputerStore.API/
+RUN dotnet restore ComputerStore.API/ComputerStore.API.csproj
 COPY . .
+RUN dotnet publish ComputerStore.API/ComputerStore.API.csproj -c Release --no-restore -o /app/publish -p:UseAppHost=false
 
-RUN dotnet publish "ComputerStore.API/ComputerStore.API.csproj" -c Release -o /app/publish/api
-RUN dotnet publish "ComputerStore.Web/ComputerStore.Web.csproj" -c Release -o /app/publish/web
-
-# Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
-
-COPY --from=build /app/publish/api ./api
-COPY --from=build /app/publish/web ./web
-
-# Chạy API từ đúng thư mục /app/api để nó load đúng appsettings.json và connection string
-RUN printf '#!/bin/sh\n\
-cd /app/api && ASPNETCORE_URLS=http://0.0.0.0:5000 dotnet ComputerStore.API.dll &\n\
-sleep 4\n\
-cd /app/web && export ASPNETCORE_URLS="http://0.0.0.0:${PORT:-8080}" && exec dotnet ComputerStore.Web.dll\n' > /app/entrypoint.sh \
-    && chmod +x /app/entrypoint.sh
-
+COPY --from=build /app/publish .
+RUN mkdir -p /home/app/.aspnet/DataProtection-Keys && chown -R app:app /home/app/.aspnet
+USER app
+ENV ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080
-
-ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
+ENTRYPOINT ["sh", "-c", "exec dotnet ComputerStore.API.dll --urls http://0.0.0.0:${PORT:-8080}"]
