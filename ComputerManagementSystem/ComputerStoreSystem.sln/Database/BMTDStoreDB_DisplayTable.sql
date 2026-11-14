@@ -77,6 +77,34 @@ INNER JOIN dbo.Categories AS c ON c.CategoryId = p.CategoryId
 WHERE c.Name = N'PC'
 ORDER BY p.ProductId;
 
+-- 6A. RIÊNG MÁY TÍNH ALL-IN-ONE
+SELECT
+    p.ProductId AS [Mã sản phẩm],
+    p.Name AS [Tên máy All-in-One],
+    p.Price AS [Giá bán (VND)],
+    p.StockQuantity AS [Số lượng tồn],
+    CASE WHEN p.StockQuantity > 0 THEN N'Còn hàng' ELSE N'Hết hàng' END AS [Tình trạng],
+    p.Specifications AS [Mô tả và thông số kỹ thuật],
+    p.ImageUrl AS [Đường dẫn ảnh]
+FROM dbo.Products AS p
+INNER JOIN dbo.Categories AS c ON c.CategoryId = p.CategoryId
+WHERE c.Name = N'All-in-One'
+ORDER BY p.ProductId;
+
+-- 6B. RIÊNG MINI PC
+SELECT
+    p.ProductId AS [Mã sản phẩm],
+    p.Name AS [Tên Mini PC],
+    p.Price AS [Giá bán (VND)],
+    p.StockQuantity AS [Số lượng tồn],
+    CASE WHEN p.StockQuantity > 0 THEN N'Còn hàng' ELSE N'Hết hàng' END AS [Tình trạng],
+    p.Specifications AS [Mô tả và thông số kỹ thuật],
+    p.ImageUrl AS [Đường dẫn ảnh]
+FROM dbo.Products AS p
+INNER JOIN dbo.Categories AS c ON c.CategoryId = p.CategoryId
+WHERE c.Name = N'Mini PC'
+ORDER BY p.ProductId;
+
 -- 7. DON HANG
 -- Sau khi nap lai du lieu demo, bang nay trong cho den khi dat don moi.
 SELECT
