@@ -1,0 +1,56 @@
+﻿@model ComputerStore.API.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Đăng nhập - DTBStore";
+}
+@await Html.PartialAsync("_AccountLegacyStyles")
+
+<div class="container py-4 store-auth-scope auth-login" style="max-width: 520px;">
+    <div class="mb-3 auth-back">
+        <a asp-controller="Product" asp-action="Index" class="btn-back-circle" title="Quay lại cửa hàng" aria-label="Quay lại cửa hàng">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        </a>
+    </div>
+    <div class="auth-card m-0 w-100" style="max-width: 100%;">
+        <div class="text-center mb-4 auth-heading">
+            <h2>⚡ ĐĂNG NHẬP</h2>
+            <p>Chào mừng bạn trở lại với hệ sinh thái DTBStore</p>
+        </div>
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert-cyber-success" role="status">@TempData["SuccessMessage"]</div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert-cyber-warning" role="alert"><i class="bi bi-exclamation-circle me-1"></i> @TempData["ErrorMessage"]</div>
+        }
+        <div asp-validation-summary="ModelOnly" class="alert-cyber-danger" role="alert"></div>
+
+        <form action="@Url.Action("Login", "Account")" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+            <label asp-for="Username" class="form-label-cyber">Số điện thoại hoặc Email</label>
+            <input asp-for="Username" class="form-control-cyber" placeholder="0385550832 hoặc email@domain.com" required autocomplete="username" />
+            <span asp-validation-for="Username" class="validation-text"></span>
+
+            <label for="loginPassword" class="form-label-cyber">Mật khẩu</label>
+            <div class="password-wrapper">
+                <input asp-for="Password" type="password" id="loginPassword" class="form-control-cyber" placeholder="••••••••" required autocomplete="current-password" />
+                <button type="button" class="btn-toggle-eye" id="btnToggleEye" data-password-target="loginPassword" title="Ẩn/Hiện mật khẩu" aria-label="Hiện mật khẩu" aria-pressed="false">
+                    <i id="loginEyeIcon" class="bi bi-eye-fill" aria-hidden="true"></i>
+                </button>
+            </div>
+            <span asp-validation-for="Password" class="validation-text"></span>
+            <div class="d-flex justify-content-between align-items-center mb-3 auth-options">
+                <label><input asp-for="RememberMe" type="checkbox" /> Ghi nhớ tài khoản</label>
+                <a asp-controller="Account" asp-action="ForgotPassword" class="auth-link">Quên mật khẩu?</a>
+            </div>
+            <button type="submit" class="btn-auth">ĐĂNG NHẬP NGAY</button>
+        </form>
+        <div class="text-center mt-4 auth-bottom">
+            Chưa có tài khoản? <a asp-controller="Account" asp-action="Register" class="auth-link">Đăng ký thành viên</a>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    @await Html.PartialAsync("_AccountLegacyScripts")
+}

@@ -1,0 +1,37 @@
+﻿CẬP NHẬT COMPUTERSTORE
+
+Giải nén gói hoàn chỉnh vào một thư mục mới. Mở ComputerStoreSystem.sln, chỉnh SQL Server theo README.md và chạy ComputerStore.API trước ComputerStore.Admin. Nếu có ảnh riêng, chép các file ảnh tương ứng từ dự án cũ vào wwwroot/images của dự án mới.
+
+Đổi mật khẩu trên web từ trang đăng nhập
+1. Bấm Quên mật khẩu rồi nhập tên đăng nhập, email hoặc số điện thoại của tài khoản Customer.
+2. Web đối chiếu cùng cơ sở dữ liệu mà WinForms quản lý. Nếu tìm thấy, web mở form đổi mật khẩu.
+3. Nhập mật khẩu hiện tại và mật khẩu mới hai lần. Sau khi lưu, web quay về trang đăng nhập.
+Luồng này không cần Admin phê duyệt, Docker, email hoặc mã khôi phục. Người dùng phải nhớ mật khẩu hiện tại.
+
+Gửi email thật
+Trong Visual Studio, nhấp chuột phải ComputerStore.API > Manage User Secrets. Thêm mục PasswordReset với các khóa Host, Port, From, Username, Password, PublicOrigin. Dùng thông tin SMTP của bạn rồi khởi động lại API.
+
+Cấu hình biến môi trường cho tiến trình API
+PasswordReset__Host = máy chủ SMTP hỗ trợ STARTTLS
+PasswordReset__Port = cổng STARTTLS, thường là 587
+PasswordReset__From = địa chỉ được máy chủ SMTP cho phép gửi
+PasswordReset__Username = tên đăng nhập SMTP
+PasswordReset__Password = mật khẩu SMTP, lưu trong môi trường hoặc User Secrets
+PasswordReset__PublicOrigin = địa chỉ HTTPS của Web, ví dụ https://localhost:7275
+
+Dùng địa chỉ HTTPS mà người nhận có thể truy cập. Khi triển khai nhiều instance hoặc container, giữ cùng bộ khóa Data Protection để liên kết hoạt động qua các lần khởi động lại.
+
+Trong Admin, bấm Hiện/Ẩn để kiểm tra mật khẩu mới đang nhập trước khi bấm Cấp lại.
+
+Kiểm tra sau khi chép
+1. Sửa họ tên, email hoặc địa chỉ ở Hồ sơ Web. Chọn Làm mới trong Quản lý người dùng Admin. Hai ứng dụng cần kết nối cùng API/database.
+2. Mở Thông tin đơn hàng, chọn Chi tiết, sau đó thử Mua lại. Nếu thiếu tồn kho cho một sản phẩm, giỏ giữ nguyên. Giá ở giỏ dùng giá hiện tại.
+3. Nhập URL TGDD dạng img.tgdd.vn/.../https://cdn.tgdd.vn/...png vào ô ảnh sản phẩm. Nhấn Enter hoặc rời ô để xem ảnh. Admin sẽ thử URL PNG/JPG gốc từ CDN thay cho URL ép WebP. Web vẫn dùng URL đã lưu.
+4. Nếu cần ảnh nội bộ, kiểm tra file thực có trong wwwroot của API đang chạy và mở URL ảnh bằng trình duyệt. Gói này sử dụng ảnh bạn đã có và các URL công khai.
+
+Dùng BMTDStoreDB.sql để tạo database mới hoặc cập nhật schema có sẵn. Script giữ danh mục đã có. Không chạy lại script seed cũ hoặc áp dụng thêm EF migration cũ lên cùng database. Đơn cũ thiếu thông tin thanh toán sẽ hiện Chưa ghi nhận.
+
+Lưu trữ mật khẩu
+- Mở BMTDStoreDB > Tables > dbo.Users > Columns để thấy cột vật lý PasswordHash.
+- PasswordHash phục vụ xác thực đăng nhập. WinForms và BMTDStoreDB_DisplayTable.sql chỉ hiển thị thông tin tài khoản. Trong WinForms, dùng nút Cấp lại để đặt mật khẩu mới.
+- Nếu CSDL thực sự thiếu PasswordHash, sao lưu rồi chạy BMTDStoreDB.sql để nâng cấp. Tài khoản thiếu thông tin mật khẩu cần được Admin cấp lại. Nếu không còn Admin đăng nhập được, dùng lệnh tạo Admin mới trong README.

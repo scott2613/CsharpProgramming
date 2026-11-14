@@ -1,0 +1,37 @@
+name: Build and package ComputerStore
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: dotnet restore ComputerStoreSystem.sln
+      - run: dotnet build ComputerStoreSystem.sln -c Release --no-restore
+      - run: dotnet run --project tests/BusinessChecks/BusinessChecks.csproj -c Release
+      - run: dotnet publish ComputerStore.Admin/ComputerStore.Admin.csproj -c Release --no-restore -o artifacts/admin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: computerstore-admin
+          path: artifacts/admin
+  linux-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: dotnet restore ComputerStore.API/ComputerStore.API.csproj
+      - run: dotnet publish ComputerStore.API/ComputerStore.API.csproj -c Release --no-restore -o artifacts/api -p:UseAppHost=false
+      - uses: actions/upload-artifact@v4
+        with:
+          name: computerstore-api
+          path: artifacts/api

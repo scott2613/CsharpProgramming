@@ -1,0 +1,291 @@
+﻿@{
+    ViewData["Title"] = "Trang chủ - BMTDStore Cyberpunk Gear";
+}
+
+<style>
+    .cyber-hero {
+        position: relative;
+        background: radial-gradient(circle at 80% 20%, rgba(0, 240, 255, 0.15) 0%, rgba(10, 14, 23, 0.95) 60%), linear-gradient(135deg, #0a0e17 0%, #111827 100%);
+        border: 1px solid rgba(0, 240, 255, 0.25);
+        border-radius: 16px;
+        padding: 4.5rem 3rem;
+        margin-bottom: 3.5rem;
+        overflow: hidden;
+        box-shadow: 0 0 35px rgba(0, 240, 255, 0.08);
+    }
+
+        .cyber-hero::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00f0ff, #ff007f, transparent);
+        }
+
+    .cyber-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(0, 240, 255, 0.1);
+        border: 1px solid rgba(0, 240, 255, 0.4);
+        color: #00f0ff;
+        padding: 0.4rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 1.5rem;
+    }
+
+    .cyber-title {
+        font-size: 3.2rem;
+        font-weight: 800;
+        line-height: 1.2;
+        color: #ffffff;
+        margin-bottom: 1.25rem;
+    }
+
+        .cyber-title span {
+            background: linear-gradient(90deg, #00f0ff, #3b82f6, #ff007f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+    .cyber-subtitle {
+        color: #94a3b8;
+        font-size: 1.1rem;
+        max-width: 600px;
+        line-height: 1.7;
+        margin-bottom: 2.2rem;
+    }
+
+    .btn-cyber-primary {
+        background: linear-gradient(90deg, #00f0ff, #0080ff);
+        color: #0a0e17;
+        font-weight: 700;
+        padding: 0.85rem 2rem;
+        border-radius: 10px;
+        border: none;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.35);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .btn-cyber-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.65);
+            color: #0a0e17;
+        }
+
+    .btn-cyber-outline {
+        background: rgba(255, 255, 255, 0.03);
+        color: #e2e8f0;
+        font-weight: 600;
+        padding: 0.85rem 2rem;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .btn-cyber-outline:hover {
+            border-color: #00f0ff;
+            color: #00f0ff;
+            background: rgba(0, 240, 255, 0.08);
+        }
+
+    .feature-card {
+        background: rgba(17, 24, 39, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 2rem 1.5rem;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+
+        .feature-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(0, 240, 255, 0.45);
+            box-shadow: 0 12px 25px rgba(0, 240, 255, 0.1);
+        }
+
+    .feature-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 12px;
+        background: rgba(0, 240, 255, 0.12);
+        border: 1px solid rgba(0, 240, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #00f0ff;
+        margin-bottom: 1.25rem;
+    }
+
+    .category-tile {
+        background: linear-gradient(145deg, #111827, #0d1320);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 1.75rem;
+        text-align: center;
+        text-decoration: none;
+        display: block;
+        transition: all 0.3s ease;
+    }
+
+        .category-tile:hover {
+            border-color: #00f0ff;
+            transform: scale(1.03);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.15);
+        }
+
+        .category-tile i {
+            font-size: 2.2rem;
+            color: #00f0ff;
+            margin-bottom: 0.85rem;
+            display: block;
+        }
+
+        .category-tile h5 {
+            color: #f8fafc;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+        }
+
+        .category-tile span {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+    @@media (max-width: 768px) {
+        .cyber-hero {
+            padding: 2.5rem 1.5rem;
+        }
+
+        .cyber-title {
+            font-size: 2.1rem;
+        }
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Hero Banner -->
+    <div class="cyber-hero">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="cyber-badge">
+                    <i class="bi bi-cpu-fill"></i> Next-Gen Gaming & Workstation
+                </div>
+                <h1 class="cyber-title">
+                    Nâng Tầm Sức Mạnh <br />
+                    <span>Phần Cứng Tương Lai</span>
+                </h1>
+                <p class="cyber-subtitle">
+                    Hệ sinh thái máy tính hiệu năng cao, linh kiện PC chính hãng và thiết bị ngoại vi chuẩn eSports. Tối ưu hóa cho lập trình viên, nhà sáng tạo nội dung và game thủ chuyên nghiệp.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a asp-controller="Product" asp-action="Index" class="btn-cyber-primary">
+                        <i class="bi bi-bag-check-fill"></i> Khám phá sản phẩm
+                    </a>
+                    <a asp-controller="Cart" asp-action="Index" class="btn-cyber-outline">
+                        <i class="bi bi-cart3"></i> Xem giỏ hàng
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-4 d-none d-lg-block text-center">
+                <i class="bi bi-pc-display" style="font-size: 9rem; color: #00f0ff; text-shadow: 0 0 35px rgba(0, 240, 255, 0.5);"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh mục nổi bật -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="text-white fw-bold mb-1">Danh Mục Trọng Tâm</h3>
+            <p class="text-secondary mb-0">Lựa chọn cấu hình theo nhu cầu sử dụng của bạn</p>
+        </div>
+        <a asp-controller="Product" asp-action="Index" class="text-info text-decoration-none fw-semibold">
+            Xem tất cả <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-6 col-md-3">
+            <a asp-controller="Product" asp-action="Index" class="category-tile">
+                <i class="bi bi-laptop"></i>
+                <h5>Laptop Gaming</h5>
+                <span>Hiệu năng RTX 50 Series</span>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a asp-controller="Product" asp-action="Index" class="category-tile">
+                <i class="bi bi-gpu-card"></i>
+                <h5>Linh Kiện PC</h5>
+                <span>VGA, CPU, Mainboard</span>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a asp-controller="Product" asp-action="Index" class="category-tile">
+                <i class="bi bi-display"></i>
+                <h5>Màn Hình</h5>
+                <span>Tần số quét 240Hz+</span>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a asp-controller="Product" asp-action="Index" class="category-tile">
+                <i class="bi bi-mouse2"></i>
+                <h5>Gaming Gear</h5>
+                <span>Chuột, Phím cơ, Tai nghe</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Cam kết dịch vụ -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h5 class="text-white fw-bold">Bảo Hành Chính Hãng 36 Tháng</h5>
+                <p class="text-secondary mb-0">
+                    Cam kết 100% linh kiện nguyên seal, hỗ trợ đổi mới 1-1 trong 30 ngày đầu nếu phát sinh lỗi phần cứng từ nhà sản xuất.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-lightning-charge"></i>
+                </div>
+                <h5 class="text-white fw-bold">Giao Hàng Hỏa Tốc 2 Giờ</h5>
+                <p class="text-secondary mb-0">
+                    Hỗ trợ lắp ráp, đi dây thẩm mỹ, cài đặt hệ điều hành và giao tận nơi miễn phí trong khu vực nội thành.
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-headset"></i>
+                </div>
+                <h5 class="text-white fw-bold">Hỗ Trợ Kỹ Thuật 24/7</h5>
+                <p class="text-secondary mb-0">
+                    Đội ngũ kỹ sư CNTT tư vấn tối ưu cấu hình theo ngân sách và hỗ trợ xử lý sự cố từ xa nhanh chóng.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
