@@ -1,6 +1,8 @@
 ﻿/* Dọn danh mục BMTDStoreDB về 24 mẫu.
    Danh mục gồm ba mẫu đang có tham chiếu trong đơn hàng hoặc giỏ hàng.
-   Giữ mã, giá, tồn kho và ảnh của mẫu đã có. Mẫu thiếu được thêm theo dữ liệu demo.
+   Giữ mã, giá và tồn kho của mẫu đã có. Mẫu thiếu được thêm theo dữ liệu demo.
+   Cập nhật URL ảnh theo tên mẫu. Số trong tên tệp dựa trên bộ ảnh gốc.
+   Đặt các tệp JPG trong ComputerStore.API/wwwroot/images/.
    Xóa sản phẩm ngoài danh sách và ảnh của chúng nếu không có đơn hàng hoặc giỏ tham chiếu.
    Nếu có tham chiếu, hiển thị các dòng cản trở rồi hoàn tác toàn bộ.
 */
@@ -41,36 +43,37 @@ BEGIN TRY
         Price DECIMAL(18,2) NOT NULL,
         StockQuantity INT NOT NULL,
         Specifications NVARCHAR(MAX) NOT NULL,
-        LegacyName NVARCHAR(200) COLLATE DATABASE_DEFAULT NULL
+        LegacyName NVARCHAR(200) COLLATE DATABASE_DEFAULT NULL,
+        ImageUrl NVARCHAR(500) NOT NULL
     );
-    INSERT @CatalogProducts (Name, CategoryName, Price, StockQuantity, Specifications, LegacyName) VALUES
-        (N'ASUS ExpertCenter D5 Mini Tower D500ME', N'PC', 10990000, 12, N'Nhóm: PC văn phòng | Core i3-13100 | RAM 8 GB | SSD 256 GB', NULL),
-        (N'Dell OptiPlex 7020 Tower', N'PC', 13990000, 8, N'Nhóm: PC văn phòng | Core i5-14500 | RAM 8 GB | SSD 512 GB', NULL),
-        (N'HP Pro Tower 400 G9', N'PC', 15490000, 6, N'Nhóm: PC văn phòng | Core i5-14500 | RAM 16 GB | SSD 512 GB', NULL),
-        (N'E-Power Office 43 AMD Ryzen 5 5500GT', N'PC', 9690000, 3, N'Nhóm: PC văn phòng | AMD Ryzen 5 5500GT', NULL),
-        (N'E-Power E-Sport 05 AMD Ryzen 5 5600X', N'PC', 18790000, 2, N'Nhóm: PC gaming | AMD Ryzen 5 5600X | Card đồ họa rời', NULL),
-        (N'Acer Predator Orion 3000 PO3-650', N'PC', 25990000, 3, N'Nhóm: PC gaming | Core i5-13400F | RTX 4060 | RAM 16 GB | SSD 512 GB', NULL),
-        (N'Lenovo Legion Tower 5 26IRB8', N'PC', 31990000, 4, N'Nhóm: PC gaming | Core i7-13700F | RTX 4060 | RAM 16 GB | SSD 1 TB', NULL),
-        (N'ASUS ROG Strix G16CH', N'PC', 39990000, 2, N'Nhóm: PC gaming | Core i7-13700F | RTX 4070 | RAM 32 GB | SSD 1 TB', NULL),
-        (N'MSI Cubi N ADL', N'Mini PC', 6490000, 10, N'Nhóm: Mini PC | Intel N100 | RAM 8 GB | SSD 256 GB', NULL),
-        (N'Lenovo ThinkCentre M70q Gen 5', N'Mini PC', 11990000, 7, N'Nhóm: Mini PC | Core i5-14400T | RAM 16 GB | SSD 512 GB', NULL),
-        (N'ASUS NUC 14 Pro', N'Mini PC', 14490000, 5, N'Nhóm: Mini PC | Core Ultra 5 125H | RAM 16 GB | SSD 512 GB', NULL),
-        (N'Apple Mac mini M4 (2024)', N'Mini PC', 15990000, 9, N'Nhóm: Mini PC | Apple M4 | Bộ nhớ 16 GB | SSD 256 GB', N'Apple Mac mini M4 2024 (10-CPU/10-GPU/16GB/256GB)'),
-        (N'HP All-in-One 24-cr1024d', N'All-in-One', 16990000, 6, N'Nhóm: Máy tính All-in-One | RAM 8 GB | SSD 512 GB | Màn hình 23,8 inch', NULL),
-        (N'SINGPC AIO S27-i713700 27 inch', N'All-in-One', 22490000, 5, N'Nhóm: Máy tính All-in-One | Core i7-13700 | RAM 16 GB | SSD 512 GB | Màn hình 27 inch', NULL),
-        (N'ASUS ExpertCenter AIO P440VAK', N'All-in-One', 29490000, 3, N'Nhóm: Máy tính All-in-One | Core 5 210H | RAM 16 GB | SSD 512 GB | Màn hình 23,8 inch', NULL),
-        (N'Apple iMac 24 inch M4 (2024)', N'All-in-One', 40990000, 2, N'Nhóm: Máy tính All-in-One | Apple M4 | Bộ nhớ 16 GB | SSD 256 GB | Màn hình Retina 4.5K', N'Apple iMac 24 inch M4 (8-CPU/8-GPU/16GB/256GB)'),
-        (N'ASUS Vivobook 15 X1504VA', N'Laptop', 11490000, 12, N'Nhóm: Laptop học tập và văn phòng | Core i3-1315U | RAM 8 GB | SSD 512 GB | Màn hình 15,6 inch', NULL),
-        (N'Dell Inspiron 15 3530', N'Laptop', 14490000, 8, N'Nhóm: Laptop học tập và văn phòng | Core i5-1334U | RAM 16 GB | SSD 512 GB | Màn hình 15,6 inch', NULL),
-        (N'Lenovo IdeaPad Slim 3 15IRH8', N'Laptop', 15990000, 6, N'Nhóm: Laptop học tập và văn phòng | Core i5-13420H | RAM 16 GB | SSD 512 GB | Màn hình 15,6 inch', NULL),
-        (N'Acer Aspire 5 A515-58M', N'Laptop', 18990000, 0, N'Nhóm: Laptop học tập và văn phòng | Core i7-1355U | RAM 16 GB | SSD 512 GB | Màn hình 15,6 inch', NULL),
-        (N'Acer Nitro V 15 ANV15-51', N'Laptop', 18990000, 8, N'Nhóm: Laptop gaming | Core i5-13420H | RTX 4050 | RAM 16 GB | SSD 512 GB', NULL),
-        (N'ASUS TUF Gaming A15 FA507NU', N'Laptop', 22990000, 5, N'Nhóm: Laptop gaming | Ryzen 7 7735HS | RTX 4050 | RAM 16 GB | SSD 512 GB', NULL),
-        (N'Lenovo LOQ 15IRX9', N'Laptop', 26490000, 4, N'Nhóm: Laptop gaming | Core i5-13450HX | RTX 4060 | RAM 16 GB | SSD 512 GB', NULL),
-        (N'MSI Katana 15 B13VFK-676VN', N'Laptop', 28990000, 0, N'Nhóm: Laptop gaming | Core i7-13620H | RTX 4060 | RAM 16 GB | SSD 1 TB', NULL);
+    INSERT @CatalogProducts (Name, CategoryName, Price, StockQuantity, Specifications, LegacyName, ImageUrl) VALUES
+        (N'ASUS ExpertCenter D5 Mini Tower D500ME', N'PC', 10990000, 12, N'Nhóm: PC văn phòng | Core i3-13100 | RAM 8 GB | SSD 256 GB', NULL, N'/images/i48.jpg'),
+        (N'Dell OptiPlex 7020 Tower', N'PC', 13990000, 8, N'Nhóm: PC văn phòng | Core i5-14500 | RAM 8 GB | SSD 512 GB', NULL, N'/images/i54.jpg'),
+        (N'HP Pro Tower 400 G9', N'PC', 15490000, 6, N'Nhóm: PC văn phòng | Core i5-14500 | RAM 16 GB | SSD 512 GB', NULL, N'/images/i57.jpg'),
+        (N'E-Power Office 43 AMD Ryzen 5 5500GT', N'PC', 9690000, 3, N'Nhóm: PC văn phòng | AMD Ryzen 5 5500GT', NULL, N'/images/i40.jpg'),
+        (N'E-Power E-Sport 05 AMD Ryzen 5 5600X', N'PC', 18790000, 2, N'Nhóm: PC gaming | AMD Ryzen 5 5600X | Card đồ họa rời', NULL, N'/images/i38.jpg'),
+        (N'Acer Predator Orion 3000 PO3-650', N'PC', 25990000, 3, N'Nhóm: PC gaming | Core i5-13400F | RTX 4060 | RAM 16 GB | SSD 512 GB', NULL, N'/images/i46.jpg'),
+        (N'Lenovo Legion Tower 5 26IRB8', N'PC', 31990000, 4, N'Nhóm: PC gaming | Core i7-13700F | RTX 4060 | RAM 16 GB | SSD 1 TB', NULL, N'/images/i60.jpg'),
+        (N'ASUS ROG Strix G16CH', N'PC', 39990000, 2, N'Nhóm: PC gaming | Core i7-13700F | RTX 4070 | RAM 32 GB | SSD 1 TB', NULL, N'/images/i50.jpg'),
+        (N'MSI Cubi N ADL', N'Mini PC', 6490000, 10, N'Nhóm: Mini PC | Intel N100 | RAM 8 GB | SSD 256 GB', NULL, N'/images/i64.jpg'),
+        (N'Lenovo ThinkCentre M70q Gen 5', N'Mini PC', 11990000, 7, N'Nhóm: Mini PC | Core i5-14400T | RAM 16 GB | SSD 512 GB', NULL, N'/images/i62.jpg'),
+        (N'ASUS NUC 14 Pro', N'Mini PC', 14490000, 5, N'Nhóm: Mini PC | Core Ultra 5 125H | RAM 16 GB | SSD 512 GB', NULL, N'/images/i49.jpg'),
+        (N'Apple Mac mini M4 (2024)', N'Mini PC', 15990000, 9, N'Nhóm: Mini PC | Apple M4 | Bộ nhớ 16 GB | SSD 256 GB', N'Apple Mac mini M4 2024 (10-CPU/10-GPU/16GB/256GB)', N'/images/i1.jpg'),
+        (N'HP All-in-One 24-cr1024d', N'All-in-One', 16990000, 6, N'Nhóm: Máy tính All-in-One | RAM 8 GB | SSD 512 GB | Màn hình 23,8 inch', NULL, N'/images/i55.jpg'),
+        (N'SINGPC AIO S27-i713700 27 inch', N'All-in-One', 22490000, 5, N'Nhóm: Máy tính All-in-One | Core i7-13700 | RAM 16 GB | SSD 512 GB | Màn hình 27 inch', NULL, N'/images/i29.jpg'),
+        (N'ASUS ExpertCenter AIO P440VAK', N'All-in-One', 29490000, 3, N'Nhóm: Máy tính All-in-One | Core 5 210H | RAM 16 GB | SSD 512 GB | Màn hình 23,8 inch', NULL, N'/images/i47.jpg'),
+        (N'Apple iMac 24 inch M4 (2024)', N'All-in-One', 40990000, 2, N'Nhóm: Máy tính All-in-One | Apple M4 | Bộ nhớ 16 GB | SSD 256 GB | Màn hình Retina 4.5K', N'Apple iMac 24 inch M4 (8-CPU/8-GPU/16GB/256GB)', N'/images/i3.jpg'),
+        (N'ASUS Vivobook 15 X1504VA', N'Laptop', 11490000, 12, N'Nhóm: Laptop học tập và văn phòng | Core i3-1315U | RAM 8 GB | SSD 512 GB | Màn hình 15,6 inch', NULL, N'/images/i52.jpg'),
+        (N'Dell Inspiron 15 3530', N'Laptop', 14490000, 8, N'Nhóm: Laptop học tập và văn phòng | Core i5-1334U | RAM 16 GB | SSD 512 GB | Màn hình 15,6 inch', NULL, N'/images/i53.jpg'),
+        (N'Lenovo IdeaPad Slim 3 15IRH8', N'Laptop', 15990000, 6, N'Nhóm: Laptop học tập và văn phòng | Core i5-13420H | RAM 16 GB | SSD 512 GB | Màn hình 15,6 inch', NULL, N'/images/i59.jpg'),
+        (N'Acer Aspire 5 A515-58M', N'Laptop', 18990000, 0, N'Nhóm: Laptop học tập và văn phòng | Core i7-1355U | RAM 16 GB | SSD 512 GB | Màn hình 15,6 inch', NULL, N'/images/i44.jpg'),
+        (N'Acer Nitro V 15 ANV15-51', N'Laptop', 18990000, 8, N'Nhóm: Laptop gaming | Core i5-13420H | RTX 4050 | RAM 16 GB | SSD 512 GB', NULL, N'/images/i45.jpg'),
+        (N'ASUS TUF Gaming A15 FA507NU', N'Laptop', 22990000, 5, N'Nhóm: Laptop gaming | Ryzen 7 7735HS | RTX 4050 | RAM 16 GB | SSD 512 GB', NULL, N'/images/i51.jpg'),
+        (N'Lenovo LOQ 15IRX9', N'Laptop', 26490000, 4, N'Nhóm: Laptop gaming | Core i5-13450HX | RTX 4060 | RAM 16 GB | SSD 512 GB', NULL, N'/images/i61.jpg'),
+        (N'MSI Katana 15 B13VFK-676VN', N'Laptop', 28990000, 0, N'Nhóm: Laptop gaming | Core i7-13620H | RTX 4060 | RAM 16 GB | SSD 1 TB', NULL, N'/images/i65.jpg');
 
     INSERT dbo.Products (CategoryId, Name, Specifications, Price, StockQuantity, ImageUrl)
-    SELECT c.CategoryId, s.Name, s.Specifications, s.Price, s.StockQuantity, NULL
+    SELECT c.CategoryId, s.Name, s.Specifications, s.Price, s.StockQuantity, s.ImageUrl
     FROM @CatalogProducts AS s
     CROSS APPLY (
         SELECT TOP (1) c.CategoryId
@@ -84,9 +87,12 @@ BEGIN TRY
     );
     DECLARE @InsertedCatalogProducts INT = @@ROWCOUNT;
 
-    DECLARE @KeptProducts TABLE (ProductId INT PRIMARY KEY);
-    INSERT @KeptProducts (ProductId)
-    SELECT picked.ProductId
+    DECLARE @KeptProducts TABLE (
+        ProductId INT PRIMARY KEY,
+        ImageUrl NVARCHAR(500) NOT NULL
+    );
+    INSERT @KeptProducts (ProductId, ImageUrl)
+    SELECT picked.ProductId, s.ImageUrl
     FROM @CatalogProducts AS s
     CROSS APPLY (
         SELECT TOP (1) p.ProductId
@@ -138,6 +144,14 @@ BEGIN TRY
         THROW 51401, N'Có sản phẩm ngoài 24 mẫu đang được đơn hàng hoặc giỏ hàng sử dụng. Đã hoàn tác toàn bộ.', 1;
     END;
 
+    UPDATE p
+    SET p.ImageUrl = k.ImageUrl
+    FROM dbo.Products AS p
+    INNER JOIN @KeptProducts AS k ON k.ProductId = p.ProductId
+    WHERE p.ImageUrl IS NULL
+       OR p.ImageUrl COLLATE Latin1_General_100_BIN2 <> k.ImageUrl COLLATE Latin1_General_100_BIN2;
+    DECLARE @UpdatedImageUrls INT = @@ROWCOUNT;
+
     DELETE image
     FROM dbo.ProductImages AS image
     INNER JOIN @RemovedProducts AS x ON x.ProductId = image.ProductId;
@@ -153,7 +167,8 @@ BEGIN TRY
     COMMIT TRANSACTION;
 
     SELECT @ProductCountBefore AS [Trước khi dọn], @InsertedCatalogProducts AS [Đã thêm],
-           @DeletedCatalogProducts AS [Đã xóa], 24 AS [Sản phẩm còn lại];
+           @DeletedCatalogProducts AS [Đã xóa], @UpdatedImageUrls AS [URL ảnh đã đổi],
+           24 AS [Sản phẩm còn lại];
     SELECT p.ProductId AS [Mã SP], p.Name AS [Tên máy], p.Price AS [Đơn giá],
            p.StockQuantity AS [Tồn kho], c.Name AS [Danh mục], p.Specifications AS [Cấu hình],
            p.ImageUrl AS [URL ảnh]
