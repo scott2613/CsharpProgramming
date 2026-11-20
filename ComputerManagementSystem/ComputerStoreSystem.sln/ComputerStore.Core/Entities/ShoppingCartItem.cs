@@ -1,9 +1,15 @@
-﻿namespace ComputerStore.Core.Entities;
-
-// Chỉ lưu lựa chọn. Giá và tồn kho luôn đọc từ Products.
-public sealed class ShoppingCartItem
+﻿namespace ComputerStore.Core.Entities
 {
-    public int UserId { get; set; }
-    public int ProductId { get; set; }
-    public int Quantity { get; set; }
+    // Giỏ hàng lưu CSDL cho khách hàng đã đăng nhập (giá và tồn kho luôn đọc trực tiếp từ Product)
+    public sealed class ShoppingCartItem
+    {
+        // Khóa chính ghép: Mã người dùng
+        public int UserId { get; set; }
+
+        // Khóa chính ghép: Mã sản phẩm
+        public int ProductId { get; set; }
+
+        // Số lượng trong giỏ hàng (1 - 999)
+        public int Quantity { get; set; }
+    }
 }
