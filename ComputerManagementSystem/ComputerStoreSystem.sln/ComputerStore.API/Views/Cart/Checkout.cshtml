@@ -1,10 +1,11 @@
 ﻿@model IEnumerable<ComputerStore.API.Models.CartItem>
 @{
-    ViewData["Title"] = "Thanh toán đơn hàng - BMDTStore";
+    ViewData["Title"] = "Thanh toán đơn hàng - BMTDStore";
 
     // Controller đọc hồ sơ theo UserId đã xác thực; Session không quyết định danh tính.
     var customer = ViewBag.Customer as ComputerStore.API.Models.ProfileViewModel;
     string selectedPayment = ViewBag.PaymentMethod as string ?? "COD";
+    if (selectedPayment != "COD" && selectedPayment != "BANKING") selectedPayment = "COD";
 
     Func<object, string, object?> getProp = (obj, propName) =>
     {
@@ -184,6 +185,15 @@
         flex-shrink: 0;
     }
 
+    .payment-radio {
+        position: absolute; width: 1px; height: 1px; opacity: 0;
+    }
+    .payment-option-card > .bi-check2-circle { opacity: 0; }
+    .payment-radio:checked + .payment-option-card > .bi-check2-circle { opacity: 1; }
+    .payment-radio:focus-visible + .payment-option-card {
+        outline: 3px solid var(--neon-teal); outline-offset: 3px;
+    }
+
     /* KHỐI LƯU Ý GIAO HÀNG */
     .delivery-notice-box {
         background: #121c1e;
@@ -348,7 +358,7 @@
                     <div class="d-flex flex-column gap-2 mb-3">
                         <!-- Option 1: COD -->
                         <label class="position-relative m-0">
-                            <input type="radio" name="paymentMethod" value="COD" class="payment-radio d-none" checked="@(selectedPayment == "COD")" />
+                            <input type="radio" name="paymentMethod" value="COD" class="payment-radio" checked="@(selectedPayment == "COD")" />
                             <div class="payment-option-card">
                                 <div class="payment-icon">
                                     <i class="bi bi-cash-stack"></i>
@@ -363,7 +373,7 @@
 
                         <!-- Option 2: VietQR -->
                         <label class="position-relative m-0">
-                            <input type="radio" name="paymentMethod" value="BANKING" class="payment-radio d-none" checked="@(selectedPayment == "BANKING")" />
+                            <input type="radio" name="paymentMethod" value="BANKING" class="payment-radio" checked="@(selectedPayment == "BANKING")" />
                             <div class="payment-option-card">
                                 <div class="payment-icon">
                                     <i class="bi bi-qr-code-scan"></i>
@@ -376,20 +386,6 @@
                             </div>
                         </label>
 
-                        <!-- Option 3: Thẻ ATM / VNPAY -->
-                        <label class="position-relative m-0">
-                            <input type="radio" name="paymentMethod" value="VNPAY" class="payment-radio d-none" disabled />
-                            <div class="payment-option-card">
-                                <div class="payment-icon">
-                                    <i class="bi bi-wallet2"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div style="font-weight: 700; color: #ffffff; font-size: 14.5px;">Cổng thanh toán điện tử (Thẻ ATM / Visa / VNPAY)</div>
-                                    <div style="font-size: 12.5px; color: #94a3b8;">Chưa tích hợp cổng thanh toán; hiện chưa thể chọn phương thức này.</div>
-                                </div>
-                                <i class="bi bi-check2-circle fs-4" style="color: var(--neon-teal);"></i>
-                            </div>
-                        </label>
                     </div>
 
                     <!-- KHUNG LƯU Ý GIAO HÀNG -->

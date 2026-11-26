@@ -1,6 +1,6 @@
 ﻿@model ComputerStore.API.Models.ProfileViewModel
 @{
-    ViewData["Title"] = "Thông tin đơn hàng - BMDTStore";
+    ViewData["Title"] = "Thông tin đơn hàng - BMTDStore";
     var orders = ViewBag.Orders as List<ComputerStore.Application.DTOs.Accounts.CustomerOrderHistoryDto> ?? new List<ComputerStore.Application.DTOs.Accounts.CustomerOrderHistoryDto>();
 
     int totalOrdersCount = orders.Count;
@@ -206,6 +206,7 @@
         text-decoration: none;
     }
 </style>
+<link rel="stylesheet" href="~/css/order-history.css" asp-append-version="true" />
 
 <div class="container py-4">
     <!-- NÚT TRÒN QUAY LẠI BÊN TRÁI -->
@@ -263,7 +264,7 @@
                                             <th>Sản phẩm / Cấu hình</th>
                                             <th>Tổng tiền</th>
                                             <th>Tình trạng đơn hàng</th>
-                                            <th class="text-end" style="width: 140px;">Thao tác</th>
+                                            <th class="text-end" style="width: 230px;">Thao tác</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -318,25 +319,37 @@
                                                     </span>
                                                 </td>
                                                 <td class="text-end">
-                                                    <details class="text-start mb-2">
-                                                        <summary class="btn-cyber-action">Chi tiết</summary>
-                                                        <div class="py-2">
-                                                            <div>Mã đơn #@item.OrderId</div>
-                                                            <div>Thời gian đặt @item.OrderDate.ToString("dd/MM/yyyy HH:mm")</div>
-                                                            <div>Trạng thái @item.Status</div>
-                                                            <div>Người nhận @item.CustomerName · @item.CustomerPhone</div>
-                                                            <div>Địa chỉ @address</div>
-                                                            <div>Thanh toán @payment</div>
-                                                            @if (item.OrderDetails != null)
-                                                            {
-                                                                foreach (var line in item.OrderDetails)
-                                                                {
-                                                                    <div>@line.ProductName × @line.Quantity · @line.UnitPrice.ToString("N0") đ/máy · @line.TotalPrice.ToString("N0") đ</div>
-                                                                }
-                                                            }
-                                                            <strong>Tổng tiền @item.TotalAmount.ToString("N0") đ</strong>
-                                                        </div>
-                                                    </details>
+                                                    <div class="order-actions">
+                                                        <button type="button" class="btn-cyber-action order-details-trigger"
+                                                                data-order-details="@item.OrderId" aria-haspopup="dialog" aria-controls="orderDetailsDialog">
+                                                            <i class="bi bi-receipt" aria-hidden="true"></i> Chi tiết đơn
+                                                        </button>
+                                                        <template id="order-detail-@item.OrderId">
+                                                            <dl class="order-detail-info">
+                                                                <div><dt>Ngày đặt</dt><dd>@item.OrderDate.ToString("dd/MM/yyyy HH:mm")</dd></div>
+                                                                <div><dt>Trạng thái</dt><dd>@item.Status</dd></div>
+                                                                <div><dt>Người nhận</dt><dd>@item.CustomerName</dd></div>
+                                                                <div><dt>Số điện thoại</dt><dd>@item.CustomerPhone</dd></div>
+                                                                <div class="order-detail-wide"><dt>Địa chỉ giao hàng</dt><dd>@address</dd></div>
+                                                                <div class="order-detail-wide"><dt>Thanh toán</dt><dd>@payment</dd></div>
+                                                            </dl>
+                                                            <div class="order-detail-products">
+                                                                <table>
+                                                                    <caption>Sản phẩm trong đơn</caption>
+                                                                    <thead><tr><th>Sản phẩm</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
+                                                                    <tbody>
+                                                                    @if (item.OrderDetails != null)
+                                                                    {
+                                                                        foreach (var line in item.OrderDetails)
+                                                                        {
+                                                                            <tr><td>@line.ProductName</td><td>@line.Quantity</td><td>@line.UnitPrice.ToString("N0") đ</td><td>@line.TotalPrice.ToString("N0") đ</td></tr>
+                                                                        }
+                                                                    }
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                            <div class="order-detail-total"><span>Tổng tiền đơn hàng</span><strong>@item.TotalAmount.ToString("N0") đ</strong></div>
+                                                        </template>
                                                     @if (item.OrderDetails is { Count: > 0 })
                                                     {
                                                         <form asp-controller="Account" asp-action="Rebuy" method="post" class="d-inline">
@@ -354,6 +367,7 @@
                                                             <button type="button" class="btn-dismiss-row" onclick="dismissOrderRow(@item.OrderId)">Ẩn</button>
                                                         }
                                                     </span>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         }
@@ -421,6 +435,16 @@
         </div>
     </div>
 </div>
+
+<dialog id="orderDetailsDialog" class="order-dialog" aria-labelledby="orderDetailsTitle">
+    <header class="order-dialog-header">
+        <div><small>THÔNG TIN ĐƠN HÀNG</small><h2 id="orderDetailsTitle">Chi tiết đơn hàng</h2></div>
+        <button type="button" class="order-dialog-close" data-close-order-dialog aria-label="Đóng chi tiết đơn hàng">×</button>
+    </header>
+    <div id="orderDetailsBody" class="order-dialog-body"></div>
+    <footer class="order-dialog-footer"><button type="button" class="btn-cyber-action" data-close-order-dialog>Đóng chi tiết</button></footer>
+</dialog>
+<script src="~/js/order-details.js" asp-append-version="true" defer></script>
 
 <div id="order-csrf" hidden>@Html.AntiForgeryToken()</div>
 <script>

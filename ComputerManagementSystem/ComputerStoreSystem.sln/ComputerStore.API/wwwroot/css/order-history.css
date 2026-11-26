@@ -1,0 +1,63 @@
+/* Nút hành động và dialog chi tiết độc lập với JS modal của Bootstrap. */
+.order-table-cyber { min-width: 940px; }
+.order-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; min-width:196px; }
+.order-actions form { margin:0; display:flex !important; }
+.order-actions .order-action-cell { display:flex; }
+.order-actions .order-details-trigger { flex-basis:100%; }
+.btn-cyber-action, .btn-cancel-order, .btn-dismiss-row, .btn-rebuy-sm, .btn-cyber-tab {
+    min-height:38px; padding:9px 14px; line-height:1.35;
+    display:inline-flex; align-items:center; justify-content:center; gap:7px;
+    box-sizing:border-box; text-decoration:none; font-family:inherit; font-weight:700;
+    transition:background-color .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.btn-cyber-action:hover, .btn-rebuy-sm:hover, .btn-cyber-tab:hover {
+    color:#5df2d6; background:#173833; border-color:#5df2d6;
+}
+.btn-cancel-order:hover { color:#fecaca; background:#482123; }
+.btn-dismiss-row:hover { color:#e2e8f0; border-color:#94a3b8; background:#233032; }
+.btn-cyber-action:focus-visible, .btn-cancel-order:focus-visible, .btn-dismiss-row:focus-visible,
+.btn-rebuy-sm:focus-visible, .btn-cyber-tab:focus-visible, .order-dialog-close:focus-visible {
+    outline:3px solid #5df2d6; outline-offset:3px;
+}
+.btn-cancel-order:disabled, .btn-cyber-action:disabled, .btn-rebuy-sm:disabled {
+    opacity:.55; cursor:wait;
+}
+.order-dialog {
+    padding:0; width:min(860px, calc(100vw - 32px)); max-width:none;
+    max-height:calc(100dvh - 40px); border:1px solid #2d675d; border-radius:16px;
+    color:#f1f5f9; background:#0e1516; box-shadow:0 28px 90px #000b;
+    font-family:'Segoe UI', sans-serif; text-align:left;
+}
+.order-dialog[open] { display:flex; flex-direction:column; }
+.order-dialog::backdrop { background:rgba(0,0,0,.74); backdrop-filter:blur(5px); }
+.order-dialog-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:22px 24px; border-bottom:1px solid #1e453e; }
+.order-dialog-header small { color:#8da4a4; font-size:11px; letter-spacing:.12em; }
+.order-dialog-header h2 { margin:6px 0 0; font-size:24px; color:#5df2d6; font-weight:700; }
+.order-dialog-close { flex-shrink:0; display:grid; place-items:center; width:40px; height:40px; padding:0; border-radius:10px; border:1px solid #1e453e; background:#142123; color:#5df2d6; font:28px/1 'Segoe UI',sans-serif; cursor:pointer; }
+.order-dialog-close:hover { background:#25413c; }
+.order-dialog-body { padding:24px; overflow:auto; min-height:0; overscroll-behavior:contain; }
+.order-detail-info { display:grid; grid-template-columns:1fr 1fr; gap:18px 28px; margin:0 0 24px; }
+.order-detail-info dt { color:#8da4a4; font-size:12px; margin:0 0 5px; font-weight:400; }
+.order-detail-info dd { margin:0; overflow-wrap:anywhere; font-size:14px; line-height:1.6; }
+.order-detail-wide { grid-column:1/-1; }
+.order-detail-products { overflow:auto; border:1px solid #1e453e; border-radius:10px; }
+.order-detail-products table { width:100%; min-width:540px; border-collapse:collapse; font-size:13px; }
+.order-detail-products caption { caption-side:top; padding:14px; color:#5df2d6; font-size:15px; font-weight:700; text-align:left; }
+.order-detail-products th { color:#8da4a4; background:#142123; font-size:12px; text-align:left; }
+.order-detail-products th, .order-detail-products td { padding:12px 14px; border-bottom:1px solid #1e453e; }
+.order-detail-products td:first-child { min-width:180px; overflow-wrap:anywhere; }
+.order-detail-products td:not(:first-child) { white-space:nowrap; }
+.order-detail-total { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding-top:22px; }
+.order-detail-total strong { color:#facc15; font-size:23px; }
+.order-dialog-footer { display:flex; justify-content:flex-end; padding:16px 24px; border-top:1px solid #1e453e; }
+@media(max-width:600px) {
+    .profile-card { padding:16px; }
+    .order-dialog { width:calc(100vw - 20px); max-height:calc(100dvh - 24px); }
+    .order-dialog-header, .order-dialog-body { padding:18px; }
+    .order-detail-info { grid-template-columns:1fr; }
+    .order-dialog-header h2 { font-size:20px; }
+    .btn-cyber-tab { flex:1; }
+}
+@media(prefers-reduced-motion:reduce) {
+    .btn-cyber-action, .btn-cancel-order, .btn-dismiss-row, .btn-rebuy-sm, .btn-cyber-tab { transition:none; }
+}
