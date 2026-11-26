@@ -22,12 +22,12 @@
             lblSearch = new Label();
             lblTitle = new Label();
             pnlDetails = new Panel();
-            btnViewOrders = new Button();
-            btnDelete = new Button();
-            btnSave = new Button();
-            btnAddNew = new Button();
-            btnResetPass = new Button();
-            btnTogglePassword = new Button();
+            btnViewOrders = new ComputerStore.Admin.Controls.AdminButton();
+            btnDelete = new ComputerStore.Admin.Controls.AdminButton();
+            btnSave = new ComputerStore.Admin.Controls.AdminButton();
+            btnAddNew = new ComputerStore.Admin.Controls.AdminButton();
+            btnResetPass = new ComputerStore.Admin.Controls.AdminButton();
+            btnTogglePassword = new ComputerStore.Admin.Controls.AdminButton();
             txtNewPassword = new TextBox();
             lblPassTitle = new Label();
             cboRole = new ComboBox();
@@ -391,7 +391,7 @@
             MinimumSize = new Size(1000, 650);
             Name = "UserManagementForm";
             StartPosition = FormStartPosition.CenterParent;
-            Text = "DTBStore - Quản Lý Tài Khoản Người Dùng";
+            Text = "BMTDStore - Quản Lý Tài Khoản Người Dùng";
             Load += UserManagementForm_Load;
             pnlHeader.ResumeLayout(false);
             pnlHeader.PerformLayout();

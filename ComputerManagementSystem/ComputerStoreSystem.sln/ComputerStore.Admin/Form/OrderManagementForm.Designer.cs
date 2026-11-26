@@ -16,7 +16,7 @@
         private void InitializeComponent()
         {
             panelHeader = new Panel();
-            btnReload = new Button();
+            btnReload = new ComputerStore.Admin.Controls.AdminButton();
             cboStatusFilter = new ComboBox();
             lblFilter = new Label();
             txtSearchOrder = new TextBox();
@@ -27,9 +27,9 @@
             dgvDetails = new DataGridView();
             lblDetailsHeader = new Label();
             panelAction = new Panel();
-            btnDeleteOrder = new Button();
-            btnEditShipping = new Button();
-            btnSaveStatus = new Button();
+            btnDeleteOrder = new ComputerStore.Admin.Controls.AdminButton();
+            btnEditShipping = new ComputerStore.Admin.Controls.AdminButton();
+            btnSaveStatus = new ComputerStore.Admin.Controls.AdminButton();
             cboNewStatus = new ComboBox();
             lblChange = new Label();
             panelHeader.SuspendLayout();
@@ -298,7 +298,7 @@
             MinimumSize = new Size(1050, 650);
             Name = "OrderManagementForm";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "DTBStore - Quản Lý Đơn Hàng";
+            Text = "BMTDStore - Quản Lý Đơn Hàng";
             Load += OrderManagementForm_Load;
             panelHeader.ResumeLayout(false);
             panelHeader.PerformLayout();

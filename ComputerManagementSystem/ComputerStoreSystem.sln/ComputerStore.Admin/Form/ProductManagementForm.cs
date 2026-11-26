@@ -11,16 +11,34 @@ namespace ComputerStore.Admin.Forms
 {
     public partial class ProductManagementForm : Form
     {
+        public event Action? OpenOrdersRequested;
+        public event Action<ProductDto>? OpenProductRequested;
         private readonly ApiService _apiService;
         private List<Product> _productList = new();
         private int _selectedProductId = 0;
+        private int? _initialProductId;
         private bool _operationInProgress;
+
+        // Dashboard chuyển mã sản phẩm cần xem hoặc cập nhật tồn kho.
+        public ProductManagementForm(int initialProductId) : this()
+        {
+            _initialProductId = initialProductId;
+        }
 
         public ProductManagementForm()
         {
             InitializeComponent();
             SetupCyberGridStyle();
+            dgvProducts.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            txtSearch.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            btnReload.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            picPreview.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnClear.Text = "Xóa ô nhập";
+            btnAdd.Text = "Thêm mới";
+            btnUpdate.Text = "Lưu kho và giá";
+            btnDelete.Text = "Xóa";
+            btnViewDetail.Text = "Xem chi tiết";
+            btnOpenOrders.Text = "Xem đơn hàng";
             btnReload.Text = "Làm mới";
             txtImageUrl.KeyDown += (_, e) =>
             {
@@ -29,6 +47,12 @@ namespace ComputerStore.Admin.Forms
                 LoadImagePreview(txtImageUrl.Text);
             };
 
+            SetupProductLayout();
+            dgvProducts.SelectionChanged += (_, _) =>
+            {
+                if (!_operationInProgress && dgvProducts.SelectedRows.Count > 0 && dgvProducts.CurrentRow != null)
+                    dgvProducts_CellClick(dgvProducts, new DataGridViewCellEventArgs(0, dgvProducts.CurrentRow.Index));
+            };
             _apiService = new ApiService();
 
 
@@ -48,6 +72,14 @@ namespace ComputerStore.Admin.Forms
             dgvProducts.DefaultCellStyle.SelectionForeColor = Color.White;
             dgvProducts.BorderStyle = BorderStyle.None;
             dgvProducts.GridColor = Color.FromArgb(30, 69, 62);
+        }
+
+        // Chọn đúng sản phẩm từ Dashboard, kể cả khi trang đã được mở trước đó.
+        internal async Task FocusProductAsync(int productId)
+        {
+            _initialProductId = productId;
+            txtSearch.Clear();
+            if (!_operationInProgress) await RunProductOperationAsync(LoadProductsAsync);
         }
 
         private async void ProductManagementForm_Load(object sender, EventArgs e)
@@ -95,8 +127,7 @@ namespace ComputerStore.Admin.Forms
                     ImageUrl = product.ImageUrl,
                     CategoryId = product.CategoryId
                 };
-                using var detailDialog = new ProductDetailDialog(dto);
-                detailDialog.ShowDialog(this);
+                OpenProductRequested?.Invoke(dto);
             }
         }
 
@@ -110,10 +141,22 @@ namespace ComputerStore.Admin.Forms
                 ClearInputs();
                 RenderGrid();
                 dgvProducts.ClearSelection();
+                if (_initialProductId.HasValue)
+                {
+                    foreach (DataGridViewRow row in dgvProducts.Rows)
+                    {
+                        if (Convert.ToInt32(row.Cells["Mã_SP"].Value) != _initialProductId.Value) continue;
+                        dgvProducts.CurrentCell = row.Cells["Mã_SP"];
+                        row.Selected = true;
+                        dgvProducts_CellClick(dgvProducts, new DataGridViewCellEventArgs(0, row.Index));
+                        break;
+                    }
+                    _initialProductId = null;
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi kết nối API: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (!IsDisposed) MessageBox.Show(this, $"Lỗi kết nối API: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -121,6 +164,7 @@ namespace ComputerStore.Admin.Forms
         {
             if (dgvProducts == null) return;
 
+            _selectedProductId = 0;
             string keyword = txtSearch?.Text.Trim().ToLower() ?? "";
             var filtered = string.IsNullOrEmpty(keyword)
                 ? _productList
@@ -326,7 +370,7 @@ namespace ComputerStore.Admin.Forms
             combo.Items.AddRange(categories.Cast<object>().ToArray());
             combo.SelectedIndex = currentId.HasValue
                 ? categories.FindIndex(c => c.CategoryId == currentId.Value) : -1;
-            var save = new Button
+            var save = new ComputerStore.Admin.Controls.AdminButton
             {
                 Text = "Xác nhận",
                 Location = new Point(190, 110),
@@ -336,7 +380,7 @@ namespace ComputerStore.Admin.Forms
                 FlatStyle = FlatStyle.Flat,
                 Enabled = combo.SelectedItem is Category
             };
-            var cancel = new Button
+            var cancel = new ComputerStore.Admin.Controls.AdminButton
             {
                 Text = "Hủy",
                 DialogResult = DialogResult.Cancel,
@@ -351,9 +395,19 @@ namespace ComputerStore.Admin.Forms
             {
                 if (combo.SelectedItem is Category) dialog.DialogResult = DialogResult.OK;
             };
-            dialog.Controls.AddRange(new Control[] { label, combo, save, cancel });
+            var dialogLayout = ComputerStore.Admin.Controls.AdminLayout.Column();
+            dialogLayout.Padding = new Padding(20);
+            ComputerStore.Admin.Controls.AdminLayout.Row(dialogLayout,
+                ComputerStore.Admin.Controls.AdminLayout.Field(label, combo, 420));
+            ComputerStore.Admin.Controls.AdminLayout.Row(dialogLayout,
+                ComputerStore.Admin.Controls.AdminLayout.Toolbar(save, cancel));
+            dialog.Controls.Add(dialogLayout);
+            dialog.AutoSize = true;
+            dialog.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            dialog.MinimumSize = new Size(490, 210);
             dialog.AcceptButton = save;
             dialog.CancelButton = cancel;
+            ComputerStore.Admin.Controls.AdminTheme.Apply(dialog);
             return dialog.ShowDialog(this) == DialogResult.OK && combo.SelectedItem is Category selected
                 ? selected.CategoryId : null;
         }
@@ -370,8 +424,7 @@ namespace ComputerStore.Admin.Forms
 
         private void btnOpenOrders_Click(object sender, EventArgs e)
         {
-            using var orderForm = new OrderManagementForm();
-            orderForm.ShowDialog(this);
+            OpenOrdersRequested?.Invoke();
         }
 
         private void txtSearch_TextChanged(object sender, EventArgs e)
@@ -410,7 +463,7 @@ namespace ComputerStore.Admin.Forms
             if (txtName == null || string.IsNullOrWhiteSpace(txtName.Text))
             {
                 MessageBox.Show("Vui lòng nhập tên máy tính!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtName?.Focus();
+                if (Visible && !_operationInProgress) txtName?.Focus();
                 return false;
             }
 
@@ -433,7 +486,7 @@ namespace ComputerStore.Admin.Forms
             if (txtSpecs != null) txtSpecs.Text = "";
             if (txtImageUrl != null) txtImageUrl.Text = "";
             LoadImagePreview(null);
-            txtName?.Focus();
+            if (Visible && !_operationInProgress) txtName?.Focus();
         }
 
         private void txtSpecs_TextChanged(object sender, EventArgs e)

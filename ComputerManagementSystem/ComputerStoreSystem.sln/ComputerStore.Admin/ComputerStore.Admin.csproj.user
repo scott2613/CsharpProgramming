@@ -2,10 +2,25 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup />
   <ItemGroup>
+    <Compile Update="Controls\AdminButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Controls\DashboardChart.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Controls\DashboardControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Controls\StableScrollPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Update="Form\LoginForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="Form\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Form\ManagementLayouts.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="Form\OrderManagementForm.cs">

@@ -11,14 +11,19 @@ namespace ComputerStore.Admin
 {
     public partial class UserManagementForm : Form
     {
+        public event Action<string>? OpenOrdersRequested;
         private readonly ApiService _apiService;
         private List<UserDto> _userList = new();
         private int _selectedUserId = 0;
         private bool _loadingUsers;
-        private readonly Button _reloadUsers = new()
+        private bool _mutatingUsers;
+        private readonly Button _reloadUsers = new ComputerStore.Admin.Controls.AdminButton()
         {
-            Text = "Làm mới", Width = 95, Dock = DockStyle.Right,
-            BackColor = Color.FromArgb(20, 61, 53), ForeColor = Color.White,
+            Text = "Làm mới",
+            Width = 95,
+            Dock = DockStyle.Right,
+            BackColor = Color.FromArgb(20, 61, 53),
+            ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat
         };
 
@@ -30,10 +35,14 @@ namespace ComputerStore.Admin
                 if (txtNewPassword.TextLength == 0) SetPasswordVisibility(false);
             };
             SetupGridStyle();
+            SetupAccountLayout();
             _apiService = new ApiService();
-            pnlHeader.Controls.Add(_reloadUsers);
-            _reloadUsers.SendToBack();
-            _reloadUsers.Click += async (_, _) => await LoadUsersAsync();
+            _reloadUsers.Click += async (_, _) => { if (!_mutatingUsers) await LoadUsersAsync(); };
+            dgvUsers.SelectionChanged += (_, _) =>
+            {
+                if (!_loadingUsers && !_mutatingUsers && dgvUsers.SelectedRows.Count > 0 && dgvUsers.CurrentRow != null)
+                    dgvUsers_CellClick(dgvUsers, new DataGridViewCellEventArgs(0, dgvUsers.CurrentRow.Index));
+            };
         }
 
         private void SetupGridStyle()
@@ -59,6 +68,7 @@ namespace ComputerStore.Admin
             _loadingUsers = true;
             _reloadUsers.Enabled = false;
             pnlDetails.Enabled = false;
+            dgvUsers.Enabled = false;
             try
             {
                 var loaded = await _apiService.GetUsersAsync();
@@ -78,8 +88,40 @@ namespace ComputerStore.Admin
                 _loadingUsers = false;
                 if (!IsDisposed)
                 {
-                    _reloadUsers.Enabled = true;
+                    _reloadUsers.Enabled = !_mutatingUsers;
+                    pnlDetails.Enabled = !_mutatingUsers;
+                    dgvUsers.Enabled = !_mutatingUsers;
+                }
+            }
+        }
+
+        private async Task RunUserOperationAsync(Func<Task> action)
+        {
+            if (_loadingUsers || _mutatingUsers || IsDisposed) return;
+            _mutatingUsers = true;
+            pnlDetails.Enabled = false;
+            _reloadUsers.Enabled = false;
+            dgvUsers.Enabled = false;
+            txtSearch.Enabled = false;
+            UseWaitCursor = true;
+            try { await action(); }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+                if (!IsDisposed) MessageBox.Show(this,
+                    "Không hoàn tất thao tác. Hãy làm mới danh sách để kiểm tra trước khi thử lại.",
+                    "BMTDStore", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            finally
+            {
+                _mutatingUsers = false;
+                if (!IsDisposed)
+                {
                     pnlDetails.Enabled = true;
+                    _reloadUsers.Enabled = true;
+                    dgvUsers.Enabled = true;
+                    txtSearch.Enabled = true;
+                    UseWaitCursor = false;
                 }
             }
         }
@@ -91,6 +133,7 @@ namespace ComputerStore.Admin
 
         private void FilterGrid()
         {
+            _selectedUserId = 0;
             string kw = txtSearch.Text.Trim().ToLower();
             var list = string.IsNullOrEmpty(kw)
                 ? _userList
@@ -145,71 +188,81 @@ namespace ComputerStore.Admin
 
         private async void btnAddNew_Click(object sender, EventArgs e)
         {
-            string username = txtUsername.Text.Trim();
-            string fullName = txtFullName.Text.Trim();
-            string phone = txtPhone.Text.Trim();
-            string email = txtEmail.Text.Trim();
-            string pass = txtNewPassword.Text;
-
-            if (string.IsNullOrWhiteSpace(username))
+            await RunUserOperationAsync(async () =>
             {
-                MessageBox.Show("Vui lòng nhập Tên đăng nhập cho tài khoản mới!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtUsername.Focus();
-                return;
-            }
+                string username = txtUsername.Text.Trim();
+                string fullName = txtFullName.Text.Trim();
+                string phone = txtPhone.Text.Trim();
+                string email = txtEmail.Text.Trim();
+                string pass = txtNewPassword.Text;
 
-            if (string.IsNullOrWhiteSpace(pass) || pass.Length < 8)
-            {
-                MessageBox.Show("Vui lòng nhập Mật khẩu (tối thiểu 8 ký tự) ở ô 'CẤP LẠI MẬT KHẨU MỚI'!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtNewPassword.Focus();
-                return;
-            }
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    MessageBox.Show("Vui lòng nhập Tên đăng nhập cho tài khoản mới!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtUsername.Focus();
+                    return;
+                }
 
-            int roleId = (cboRole.SelectedItem != null && cboRole.SelectedItem.ToString()!.Contains("Admin")) ? 1 : 2;
+                if (string.IsNullOrWhiteSpace(pass) || pass.Length < 8)
+                {
+                    MessageBox.Show("Vui lòng nhập Mật khẩu (tối thiểu 8 ký tự) ở ô 'CẤP LẠI MẬT KHẨU MỚI'!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtNewPassword.Focus();
+                    return;
+                }
 
-            bool success = await _apiService.CreateUserAsync(username, pass, fullName, phone, email, roleId);
-            if (success)
-            {
-                MessageBox.Show("Thêm mới tài khoản thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                txtNewPassword.Text = "";
-                await LoadUsersAsync();
-            }
+                int roleId = (cboRole.SelectedItem != null && cboRole.SelectedItem.ToString()!.Contains("Admin")) ? 1 : 2;
+
+                bool success = await _apiService.CreateUserAsync(username, pass, fullName, phone, email, roleId);
+                if (IsDisposed) return;
+                if (success)
+                {
+                    MessageBox.Show("Thêm mới tài khoản thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    txtNewPassword.Text = "";
+                    await LoadUsersAsync();
+                }
+
+            });
         }
 
         private async void btnSave_Click(object sender, EventArgs e)
         {
-            if (_loadingUsers) return;
-
-            if (_selectedUserId <= 0)
+            await RunUserOperationAsync(async () =>
             {
-                MessageBox.Show("Vui lòng click chọn một người dùng từ bảng danh sách trước khi cập nhật!", "Nhắc nhở", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
+                if (_loadingUsers) return;
 
-            string newUsername = txtUsername.Text.Trim();
-            if (string.IsNullOrWhiteSpace(newUsername))
-            {
-                MessageBox.Show("Tên đăng nhập không được để trống!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtUsername.Focus();
-                return;
-            }
+                if (_selectedUserId <= 0)
+                {
+                    MessageBox.Show("Vui lòng click chọn một người dùng từ bảng danh sách trước khi cập nhật!", "Nhắc nhở", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
 
-            int roleId = (cboRole.SelectedItem != null && cboRole.SelectedItem.ToString()!.Contains("Admin")) ? 1 : 2;
+                string newUsername = txtUsername.Text.Trim();
+                if (string.IsNullOrWhiteSpace(newUsername))
+                {
+                    MessageBox.Show("Tên đăng nhập không được để trống!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtUsername.Focus();
+                    return;
+                }
 
-            bool success = await _apiService.UpdateUserAsync(
-                _selectedUserId,
-                newUsername,
-                txtFullName.Text.Trim(),
-                txtPhone.Text.Trim(),
-                txtEmail.Text.Trim(),
-                roleId
-            );
+                int roleId = (cboRole.SelectedItem != null && cboRole.SelectedItem.ToString()!.Contains("Admin")) ? 1 : 2;
 
-            if (success)
-            {
-                MessageBox.Show($"Cập nhật tài khoản #{_selectedUserId} thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                await LoadUsersAsync();
-            }
+                bool success = await _apiService.UpdateUserAsync(
+                    _selectedUserId,
+                    newUsername,
+                    txtFullName.Text.Trim(),
+                    txtPhone.Text.Trim(),
+                    txtEmail.Text.Trim(),
+                    roleId
+                );
+
+                if (IsDisposed) return;
+                if (success)
+                {
+                    MessageBox.Show($"Cập nhật tài khoản #{_selectedUserId} thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    await LoadUsersAsync();
+                }
+
+            });
         }
 
         private void SetPasswordVisibility(bool visible)
@@ -226,60 +279,70 @@ namespace ComputerStore.Admin
 
         private async void btnResetPass_Click(object sender, EventArgs e)
         {
-            if (_loadingUsers) return;
-
-            if (_selectedUserId <= 0)
+            await RunUserOperationAsync(async () =>
             {
-                MessageBox.Show("Vui lòng chọn tài khoản cần đặt lại mật khẩu!", "Nhắc nhở", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
+                if (_loadingUsers) return;
 
-            string newPass = txtNewPassword.Text;
-            if (string.IsNullOrEmpty(newPass) || newPass.Length < 8)
-            {
-                MessageBox.Show("Mật khẩu mới phải có tối thiểu 8 ký tự!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+                if (_selectedUserId <= 0)
+                {
+                    MessageBox.Show("Vui lòng chọn tài khoản cần đặt lại mật khẩu!", "Nhắc nhở", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
 
-            bool success = await _apiService.ResetUserPasswordAsync(_selectedUserId, newPass);
-            if (success)
-            {
-                MessageBox.Show($"Đặt lại mật khẩu cho tài khoản #{_selectedUserId} ({txtUsername.Text}) thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                await LoadUsersAsync();
-            }
+                string newPass = txtNewPassword.Text;
+                if (string.IsNullOrEmpty(newPass) || newPass.Length < 8)
+                {
+                    MessageBox.Show("Mật khẩu mới phải có tối thiểu 8 ký tự!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                bool success = await _apiService.ResetUserPasswordAsync(_selectedUserId, newPass);
+                if (IsDisposed) return;
+                if (success)
+                {
+                    MessageBox.Show($"Đặt lại mật khẩu cho tài khoản #{_selectedUserId} ({txtUsername.Text}) thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    await LoadUsersAsync();
+                }
+
+            });
         }
 
         private async void btnDelete_Click(object sender, EventArgs e)
         {
-            if (_loadingUsers) return;
-
-            if (_selectedUserId <= 0)
+            await RunUserOperationAsync(async () =>
             {
-                MessageBox.Show("Vui lòng chọn tài khoản cần xóa!", "Nhắc nhở", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
+                if (_loadingUsers) return;
 
-            var confirm = MessageBox.Show(
-                $"Bạn có chắc chắn muốn xóa tài khoản #{_selectedUserId} ({txtUsername.Text}) không?\nThao tác này không thể hoàn tác!",
-                "Xác nhận xóa",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Warning
-            );
+                if (_selectedUserId <= 0)
+                {
+                    MessageBox.Show("Vui lòng chọn tài khoản cần xóa!", "Nhắc nhở", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
 
-            if (confirm != DialogResult.Yes) return;
+                var confirm = MessageBox.Show(
+                    $"Bạn có chắc chắn muốn xóa tài khoản #{_selectedUserId} ({txtUsername.Text}) không?\nThao tác này không thể hoàn tác!",
+                    "Xác nhận xóa",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning
+                );
 
-            bool success = await _apiService.DeleteUserAsync(_selectedUserId);
-            if (success)
-            {
-                MessageBox.Show("Xóa tài khoản thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                _selectedUserId = 0;
-                txtUsername.Text = "";
-                txtFullName.Text = "";
-                txtPhone.Text = "";
-                txtEmail.Text = "";
-                txtNewPassword.Text = "";
-                await LoadUsersAsync();
-            }
+                if (confirm != DialogResult.Yes) return;
+
+                bool success = await _apiService.DeleteUserAsync(_selectedUserId);
+                if (IsDisposed) return;
+                if (success)
+                {
+                    MessageBox.Show("Xóa tài khoản thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    _selectedUserId = 0;
+                    txtUsername.Text = "";
+                    txtFullName.Text = "";
+                    txtPhone.Text = "";
+                    txtEmail.Text = "";
+                    txtNewPassword.Text = "";
+                    await LoadUsersAsync();
+                }
+
+            });
         }
 
         private void btnViewOrders_Click(object sender, EventArgs e)
@@ -296,8 +359,7 @@ namespace ComputerStore.Admin
                 ? txtPhone.Text.Trim()
                 : (!string.IsNullOrEmpty(txtFullName.Text.Trim()) ? txtFullName.Text.Trim() : txtUsername.Text.Trim());
 
-            var orderForm = new OrderManagementForm(filterKey);
-            orderForm.ShowDialog();
+            OpenOrdersRequested?.Invoke(filterKey);
         }
     }
 }

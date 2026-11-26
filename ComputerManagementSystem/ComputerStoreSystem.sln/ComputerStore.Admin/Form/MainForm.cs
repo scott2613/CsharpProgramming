@@ -1,291 +1,232 @@
-﻿using ComputerStore.Admin.Forms;
+﻿using ComputerStore.Admin.Controls;
+using ComputerStore.Admin.Forms;
+using ComputerStore.Admin.Services;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace ComputerStore.Admin
+namespace ComputerStore.Admin;
+
+public partial class MainForm : Form
 {
-    public partial class MainForm : Form
+    private readonly DashboardControl _dashboard = new();
+    private readonly Panel _content = new() { Dock = DockStyle.Fill, AutoScroll = false };
+    private readonly Dictionary<string, Button> _menuButtons = new();
+    private readonly Dictionary<string, Form> _pages = new();
+    private Control? _activePage;
+    private ProductDetailDialog? _detailPage;
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+    public bool LogoutRequested { get; private set; }
+
+    public MainForm()
     {
-        public bool LogoutRequested { get; private set; }
+        InitializeComponent();
+        SetupShell();
+        Shown += async (_, _) => await ShowDashboardAsync();
+    }
 
-        public MainForm()
+    private void Form1_Load(object sender, EventArgs e) { }
+
+    private void SetupShell()
+    {
+        Text = "BMTDStore - Quản trị";
+        Size = new Size(1400, 850);
+        MinimumSize = new Size(1120, 720);
+        StartPosition = FormStartPosition.CenterScreen;
+        BackColor = AdminTheme.Background;
+        ForeColor = Color.White;
+        Controls.Clear();
+        var layout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1, Margin = Padding.Empty };
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 250));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        var menu = new FlowLayoutPanel
         {
-            InitializeComponent();
-            SetupCyberDashboard();
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
+            Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown,
+            WrapContents = false, AutoScroll = true, Padding = new Padding(12, 24, 12, 12),
+            BackColor = AdminTheme.Surface, Margin = Padding.Empty
+        };
+        menu.Controls.Add(new Label
         {
-        }
-
-        private void SetupCyberDashboard()
+            Text = "BMTDStore", AutoSize = false, Size = new Size(220, 60),
+            Font = new Font("Segoe UI", 18, FontStyle.Bold), ForeColor = AdminTheme.Accent
+        });
+        AddMenu("dashboard", "DASHBOARD", async () => await ShowDashboardAsync());
+        AddMenu("orders", "QUẢN LÝ ĐƠN HÀNG", () => { ShowOrders(); return Task.CompletedTask; });
+        AddMenu("products", "QUẢN LÝ SẢN PHẨM", () => { ShowProducts(); return Task.CompletedTask; });
+        AddMenu("users", "QUẢN LÝ TÀI KHOẢN", () => { ShowUsers(); return Task.CompletedTask; });
+        var logout = MenuButton("ĐĂNG XUẤT");
+        logout.ForeColor = AdminTheme.Danger;
+        logout.Click += async (_, _) =>
         {
-            // 1. Cấu hình Form
-            this.Text = "DTBStore - Trung Tâm Quản Trị Hệ Thống Phần Cứng";
-            this.Size = new Size(1220, 750);
-            this.MinimumSize = new Size(1050, 680);
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor = Color.FromArgb(8, 12, 13);
-            this.ForeColor = Color.White;
+            if (MessageBox.Show(this, "Bạn muốn đăng xuất?", "BMTDStore",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            logout.Enabled = false;
+            try { await new ApiService().LogoutAsync(); }
+            catch (Exception) { MessageBox.Show(this, "API chưa xác nhận đăng xuất. Cookie trên máy đã được xóa."); }
+            LogoutRequested = true;
+            Close();
+        };
+        menu.Controls.Add(logout);
+        _dashboard.OpenOrderRequested += async id => await ShowOrdersAsync(id, null);
+        _dashboard.OpenProductRequested += async id =>
+        {
+            var page = ShowProducts();
+            await page.FocusProductAsync(id);
+        };
+        _content.Controls.Add(_dashboard);
+        _dashboard.Hide();
+        AdminTheme.Apply(_dashboard);
+        layout.Controls.Add(menu, 0, 0);
+        layout.Controls.Add(_content, 1, 0);
+        Controls.Add(layout);
 
-            this.Controls.Clear();
-
-            // 2. TableLayoutPanel chia 2 cột: Sidebar & Content
-            TableLayoutPanel rootLayout = new TableLayoutPanel
+        void AddMenu(string key, string title, Func<Task> action)
+        {
+            var button = MenuButton(title);
+            _menuButtons.Add(key, button);
+            button.Click += async (_, _) =>
             {
-                Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 1,
-                BackColor = Color.FromArgb(8, 12, 13),
-                Margin = new Padding(0),
-                Padding = new Padding(0)
-            };
-
-            // Tăng cột Sidebar lên 270px để các nút chữ dài không bị cụt
-            rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 270F));
-            rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-
-            // ==================== CỘT TRÁI: SIDEBAR ====================
-            Panel panelSidebar = new Panel
-            {
-                Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(14, 21, 22),
-                Padding = new Padding(12),
-                Margin = new Padding(0)
-            };
-
-            Label lblBrand = new Label
-            {
-                Text = "DTBSTORE ADMIN",
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(93, 242, 214),
-                Dock = DockStyle.Top,
-                Height = 65,
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-            panelSidebar.Controls.Add(lblBrand);
-
-            // Nút 1: Quản lý đơn hàng
-            Button btnOrders = CreateMenuButton("🛒  QUẢN LÝ ĐƠN HÀNG");
-            btnOrders.Top = 85;
-            btnOrders.Click += (s, e) =>
-            {
-                using var orderForm = new OrderManagementForm();
-                orderForm.ShowDialog(this);
-            };
-            panelSidebar.Controls.Add(btnOrders);
-
-            // Nút 2: Quản lý sản phẩm
-            Button btnProducts = CreateMenuButton("💻  QUẢN LÝ SẢN PHẨM");
-            btnProducts.Top = 150;
-            btnProducts.Click += (s, e) =>
-            {
-                using var productForm = new ProductManagementForm();
-                productForm.ShowDialog(this);
-            };
-            panelSidebar.Controls.Add(btnProducts);
-
-            // Nút 3: Quản lý tài khoản
-            Button btnUsers = CreateMenuButton("👤  QUẢN LÝ TÀI KHOẢN");
-            btnUsers.Top = 215;
-            btnUsers.Click += (s, e) =>
-            {
-                using var userForm = new UserManagementForm();
-                userForm.ShowDialog(this);
-            };
-            panelSidebar.Controls.Add(btnUsers);
-
-            // Nút 4: Đăng xuất
-            Button btnLogout = CreateMenuButton("🚪  ĐĂNG XUẤT");
-            btnLogout.Top = 280;
-            btnLogout.ForeColor = Color.FromArgb(248, 113, 113);
-            btnLogout.Click += async (s, e) =>
-            {
-                if (MessageBox.Show(this, "Bạn có chắc chắn muốn đăng xuất phiên làm việc?", "Xác nhận",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
-                btnLogout.Enabled = false;
-                try { await new ComputerStore.Admin.Services.ApiService().LogoutAsync(); }
-                catch (Exception) { MessageBox.Show(this, "Không xác nhận được đăng xuất với API. Cookie trên máy đã được xóa."); }
-                LogoutRequested = true;
-                Close();
-            };
-            panelSidebar.Controls.Add(btnLogout);
-
-            rootLayout.Controls.Add(panelSidebar, 0, 0);
-
-            // ==================== CỘT PHẢI: NỘI DUNG CHÍNH ====================
-            Panel panelContent = new Panel
-            {
-                Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(8, 12, 13),
-                Padding = new Padding(35, 25, 25, 25),
-                Margin = new Padding(0),
-                AutoScroll = true
-            };
-
-            // Tiêu đề chính (đổi && thành & và UseMnemonic = false để hiển thị đúng 1 dấu &)
-            Label lblWelcome = new Label
-            {
-                Text = "TRUNG TÂM KIỂM SOÁT ĐƠN HÀNG & HỆ THỐNG MÁY TÍNH",
-                UseMnemonic = false,
-                Font = new Font("Segoe UI", 15F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(93, 242, 214),
-                AutoSize = true,
-                Location = new Point(35, 25)
-            };
-            panelContent.Controls.Add(lblWelcome);
-
-            Label lblSub = new Label
-            {
-                Text = "Dữ liệu được đồng bộ hóa tức thời qua Web API từ DTBStore E-Commerce.",
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular),
-                ForeColor = Color.FromArgb(160, 175, 175),
-                AutoSize = true,
-                Location = new Point(35, 65)
-            };
-            panelContent.Controls.Add(lblSub);
-
-            // Khung chứa các thẻ chức năng (Cards)
-            FlowLayoutPanel flowCards = new FlowLayoutPanel
-            {
-                Location = new Point(35, 115),
-                Size = new Size(860, 520),
-                BackColor = Color.Transparent,
-                AutoScroll = true
-            };
-
-            // Card 1: Quản lý Đơn hàng
-            Panel cardOrders = CreateInfoCard(
-                "ĐƠN HÀNG TRỰC TUYẾN",
-                "Xử lý, duyệt đơn và cập nhật vận chuyển khách đặt từ website.",
-                "MỞ QUẢN LÝ ĐƠN"
-            );
-            Button? btnCardOrder = cardOrders.Controls["actionBtn"] as Button;
-            if (btnCardOrder != null)
-            {
-                btnCardOrder.Click += (s, e) =>
+                // Vẫn cho phép chuyển mục khi Dashboard đang chờ API.
+                try { await action(); }
+                catch (Exception ex)
                 {
-                    using var orderForm = new OrderManagementForm();
-                    orderForm.ShowDialog(this);
-                };
-            }
-            flowCards.Controls.Add(cardOrders);
-
-            // Card 2: Kho phần cứng
-            Panel cardProducts = CreateInfoCard(
-                "KHO LINH KIỆN & LAPTOP",
-                "Quản lý danh sách mẫu mã, cập nhật giá bán, số lượng tồn kho.",
-                "MỞ QUẢN LÝ KHO"
-            );
-            Button? btnCardProd = cardProducts.Controls["actionBtn"] as Button;
-            if (btnCardProd != null)
-            {
-                btnCardProd.Click += (s, e) =>
-                {
-                    using var productForm = new ProductManagementForm();
-                    productForm.ShowDialog(this);
-                };
-            }
-            flowCards.Controls.Add(cardProducts);
-
-            // Card 3: Quản lý Tài khoản
-            Panel cardUsers = CreateInfoCard(
-                "TÀI KHOẢN NGƯỜI DÙNG",
-                "Xem danh sách thành viên, cấp quyền Admin/Customer và đặt lại mật khẩu.",
-                "MỞ QUẢN LÝ TÀI KHOẢN"
-            );
-            Button? btnCardUser = cardUsers.Controls["actionBtn"] as Button;
-            if (btnCardUser != null)
-            {
-                btnCardUser.Click += (s, e) =>
-                {
-                    using var userForm = new UserManagementForm();
-                    userForm.ShowDialog(this);
-                };
-            }
-            flowCards.Controls.Add(cardUsers);
-
-            panelContent.Controls.Add(flowCards);
-
-            rootLayout.Controls.Add(panelContent, 1, 0);
-
-            this.Controls.Add(rootLayout);
+                    if (!IsDisposed) MessageBox.Show(this, "Không mở được trang. " + ex.Message,
+                        "BMTDStore", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            };
+            menu.Controls.Add(button);
         }
+    }
 
-        private Button CreateMenuButton(string text)
+    private async Task ShowDashboardAsync()
+    {
+        ActivatePage("dashboard", _dashboard);
+        _dashboard.AutoScrollPosition = Point.Empty;
+        // Tải lại khi quay về để số liệu phản ánh thao tác vừa lưu ở màn hình quản lý.
+        await _dashboard.ReloadAsync();
+    }
+
+    private OrderManagementForm ShowOrders()
+    {
+        var page = GetPage("orders", () => new OrderManagementForm());
+        ActivatePage("orders", page);
+        return page;
+    }
+
+    private async Task ShowOrdersAsync(int? orderId, string? customerFilter)
+    {
+        // Khởi tạo bằng bộ lọc cần đến; các lần sau dùng lại trang để giữ trạng thái nhập.
+        if (!_pages.ContainsKey("orders"))
         {
-            var btn = new Button
-            {
-                Text = text,
-                Width = 246, // Tăng độ rộng nút vừa khít cột 270px
-                Height = 48,
-                Left = 12,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold), // Điều chỉnh font chữ thanh thoát vừa vặn
-                BackColor = Color.FromArgb(20, 31, 33),
-                ForeColor = Color.FromArgb(93, 242, 214),
-                TextAlign = ContentAlignment.MiddleLeft,
-                Padding = new Padding(12, 0, 0, 0),
-                Cursor = Cursors.Hand
-            };
-            btn.FlatAppearance.BorderColor = Color.FromArgb(30, 69, 62);
-            btn.FlatAppearance.MouseOverBackColor = Color.FromArgb(0, 121, 107);
-
-            return btn;
+            var created = GetPage("orders", () => orderId.HasValue
+                ? new OrderManagementForm(orderId.Value) : new OrderManagementForm(customerFilter));
+            ActivatePage("orders", created);
+            return;
         }
+        var page = ShowOrders();
+        await page.NavigateAsync(orderId, customerFilter);
+    }
 
-        private Panel CreateInfoCard(string title, string desc, string btnText)
+    private ProductManagementForm ShowProducts()
+    {
+        var page = GetPage("products", () =>
         {
-            Panel card = new Panel
-            {
-                Width = 360,
-                Height = 220,
-                Margin = new Padding(0, 0, 25, 20),
-                BackColor = Color.FromArgb(14, 21, 22),
-                BorderStyle = BorderStyle.FixedSingle,
-                Padding = new Padding(18)
-            };
+            var form = new ProductManagementForm();
+            form.OpenOrdersRequested += async () => await ShowOrdersAsync(null, null);
+            form.OpenProductRequested += ShowProductDetail;
+            return form;
+        });
+        ActivatePage("products", page);
+        return page;
+    }
 
-            Label lblTitle = new Label
-            {
-                Text = title,
-                UseMnemonic = false,
-                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(93, 242, 214),
-                Dock = DockStyle.Top,
-                Height = 35
-            };
+    private void ShowProductDetail(ProductDto product)
+    {
+        var page = new ProductDetailDialog(product);
+        page.BackRequested += () => ShowProducts();
+        ConfigureEmbedded(page);
+        _content.Controls.Add(page);
+        // ActivatePage dọn trang chi tiết cũ trước khi gán trang mới.
+        ActivatePage("products", page);
+        _detailPage = page;
+    }
 
-            Label lblDesc = new Label
-            {
-                Text = desc,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular),
-                ForeColor = Color.FromArgb(200, 215, 215),
-                Dock = DockStyle.Top,
-                Height = 75
-            };
+    private void ShowUsers()
+    {
+        var page = GetPage("users", () =>
+        {
+            var form = new UserManagementForm();
+            form.OpenOrdersRequested += async filter => await ShowOrdersAsync(null, filter);
+            return form;
+        });
+        ActivatePage("users", page);
+    }
 
-            Button btnAction = new Button
-            {
-                Name = "actionBtn",
-                Text = btnText,
-                Dock = DockStyle.Bottom,
-                Height = 45,
-                FlatStyle = FlatStyle.Flat,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                BackColor = Color.FromArgb(0, 121, 107),
-                ForeColor = Color.White,
-                Cursor = Cursors.Hand
-            };
-            btnAction.FlatAppearance.BorderColor = Color.FromArgb(93, 242, 214);
+    private T GetPage<T>(string key, Func<T> factory) where T : Form
+    {
+        if (_pages.TryGetValue(key, out var existing) && !existing.IsDisposed) return (T)existing;
+        var page = factory();
+        ConfigureEmbedded(page);
+        _pages[key] = page;
+        _content.Controls.Add(page);
+        page.Hide();
+        return page;
+    }
 
-            card.Controls.Add(btnAction);
-            card.Controls.Add(lblDesc);
-            card.Controls.Add(lblTitle);
+    private static void ConfigureEmbedded(Form page)
+    {
+        // Form trở thành control con; không tạo cửa sổ hay nút trên thanh tác vụ riêng.
+        page.TopLevel = false;
+        page.FormBorderStyle = FormBorderStyle.None;
+        page.ShowInTaskbar = false;
+        page.StartPosition = FormStartPosition.Manual;
+        page.MinimumSize = Size.Empty;
+        page.AutoScroll = false;
+        page.AutoScaleMode = AutoScaleMode.None;
+        page.Dock = DockStyle.Fill;
+        AdminTheme.Apply(page);
+    }
 
-            return card;
+    private void ActivatePage(string key, Control page)
+    {
+        _content.SuspendLayout();
+        _activePage?.Hide();
+        if (_detailPage != null && _detailPage != page)
+        {
+            _detailPage.Dispose();
+            _detailPage = null;
         }
+        _content.AutoScrollPosition = Point.Empty;
+        _content.AutoScrollMinSize = Size.Empty;
+        page.Show();
+        page.BringToFront();
+        if (page is UserManagementForm accountPage) accountPage.ResetEditorScroll();
+        if (page is ProductManagementForm productPage) productPage.ResetEditorScroll();
+        _activePage = page;
+        foreach (var entry in _menuButtons)
+        {
+            bool selected = entry.Key == key;
+            entry.Value.BackColor = selected ? AdminTheme.Selected : AdminTheme.Input;
+            entry.Value.FlatAppearance.BorderColor = selected ? AdminTheme.Accent : AdminTheme.Border;
+            entry.Value.AccessibleDescription = selected ? "Trang đang mở" : "Mở trang trong khung bên phải";
+        }
+        _content.ResumeLayout(true);
+    }
+
+    private static Button MenuButton(string text)
+    {
+        var button = new ComputerStore.Admin.Controls.AdminButton
+        {
+            Name = "AdminMenuButton", Text = text, Width = 220, Height = 40, Margin = new Padding(0, 0, 0, 8),
+            TextAlign = ContentAlignment.MiddleLeft, Padding = new Padding(10, 0, 0, 0)
+        };
+        AdminTheme.StyleButton(button);
+        button.AutoSize = false;
+        button.TextAlign = ContentAlignment.MiddleLeft;
+        button.Padding = new Padding(16, 0, 8, 0);
+        return button;
     }
 }

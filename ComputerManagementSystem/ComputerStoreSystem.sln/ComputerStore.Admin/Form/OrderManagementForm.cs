@@ -16,16 +16,26 @@ namespace ComputerStore.Admin.Forms
         private readonly ApiService _apiService;
         private List<OrderDto> _orders = new();
         private readonly string? _initialCustomerFilter;
+        private readonly int? _initialOrderId;
         private readonly CancellationTokenSource _requests = new();
         private readonly CancellationToken _requestToken;
         private bool _ready, _rendering, _busy, _closed, _dataFresh;
+        private bool _pendingNavigation;
+        private int? _pendingOrderId;
+        private string? _pendingCustomerFilter;
         private static readonly string[] Statuses =
             { "Chờ xử lý", "Đã xác nhận", "Đang giao", "Đã hoàn thành", "Đã hủy" };
 
         public OrderManagementForm() : this(null) { }
+        // Dashboard mở đúng dòng đơn hàng được nhấp đúp.
+        public OrderManagementForm(int initialOrderId) : this(null)
+        {
+            _initialOrderId = initialOrderId;
+        }
         public OrderManagementForm(string? initialCustomerFilter)
         {
             InitializeComponent();
+            SetupOrderLayout();
             _apiService = new ApiService();
             _initialCustomerFilter = initialCustomerFilter?.Trim();
             _requestToken = _requests.Token;
@@ -54,6 +64,8 @@ namespace ComputerStore.Admin.Forms
         private async void OrderManagementForm_Load(object sender, EventArgs e)
         {
             ApplyCyberDarkTheme();
+            ComputerStore.Admin.Controls.AdminTheme.Apply(this);
+            btnReload.Text = "Làm mới";
             _rendering = true;
             try
             {
@@ -67,7 +79,7 @@ namespace ComputerStore.Admin.Forms
             _ready = true;
             if (!string.IsNullOrEmpty(_initialCustomerFilter))
             {
-                Text = $"DTBStore - Đơn Hàng Của Khách: {_initialCustomerFilter}";
+                Text = $"BMTDStore - Đơn Hàng Của Khách: {_initialCustomerFilter}";
                 txtSearchOrder.Text = _initialCustomerFilter;
             }
             UpdateActionState();
@@ -147,9 +159,38 @@ namespace ComputerStore.Admin.Forms
                 _dataFresh = false;
                 Notify("Không hoàn tất thao tác. Hãy tải lại dữ liệu trước khi tiếp tục.", MessageBoxIcon.Error);
             }
-            finally { SetBusy(false); }
+            finally
+            {
+                SetBusy(false);
+                if (_pendingNavigation && !_closed && !IsDisposed)
+                {
+                    _pendingNavigation = false;
+                    await NavigateAsync(_pendingOrderId, _pendingCustomerFilter);
+                }
+            }
         }
-        private Task FetchOrdersAsync() => RunAsync(() => LoadOrdersCoreAsync(SelectedOrder()?.OrderId));
+        // Điều hướng nội bộ từ Dashboard/tài khoản: bỏ bộ lọc cũ trước khi chọn đơn.
+        internal async Task NavigateAsync(int? orderId, string? customerFilter)
+        {
+            if (_closed || IsDisposed) return;
+            if (!_ready || _busy)
+            {
+                _pendingNavigation = true;
+                _pendingOrderId = orderId;
+                _pendingCustomerFilter = customerFilter;
+                return;
+            }
+            _rendering = true;
+            try
+            {
+                txtSearchOrder.Text = customerFilter ?? "";
+                cboStatusFilter.SelectedIndex = 0;
+            }
+            finally { _rendering = false; }
+            await RunAsync(() => LoadOrdersCoreAsync(orderId));
+        }
+
+        private Task FetchOrdersAsync() => RunAsync(() => LoadOrdersCoreAsync(SelectedOrder()?.OrderId ?? _initialOrderId));
         private async Task LoadOrdersCoreAsync(int? keepId)
         {
             var loaded = await _apiService.GetOrdersAsync(_requestToken);
@@ -332,7 +373,7 @@ namespace ComputerStore.Admin.Forms
                 Label lblAddress = new Label { Left = 20, Top = 140, Text = "Địa chỉ nhận hàng:", AutoSize = true, ForeColor = Color.FromArgb(93, 242, 214) };
                 TextBox txtAddress = new TextBox { Left = 20, Top = 165, Width = 400, MaxLength = 500, Text = order.FinalAddress ?? order.DeliveryAddress ?? "", BackColor = Color.FromArgb(20, 31, 33), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
 
-                Button btnConfirm = new Button
+                Button btnConfirm = new ComputerStore.Admin.Controls.AdminButton
                 {
                     Text = "Lưu thay đổi",
                     Left = 280,
@@ -345,13 +386,26 @@ namespace ComputerStore.Admin.Forms
                     Cursor = Cursors.Hand
                 };
 
-                prompt.Controls.Add(lblName);
-                prompt.Controls.Add(txtName);
-                prompt.Controls.Add(lblPhone);
-                prompt.Controls.Add(txtPhone);
-                prompt.Controls.Add(lblAddress);
-                prompt.Controls.Add(txtAddress);
-                prompt.Controls.Add(btnConfirm);
+                var shippingLayout = ComputerStore.Admin.Controls.AdminLayout.Column();
+                shippingLayout.Padding = new Padding(20);
+                ComputerStore.Admin.Controls.AdminLayout.Row(shippingLayout,
+                    ComputerStore.Admin.Controls.AdminLayout.Field(lblName, txtName, 420));
+                ComputerStore.Admin.Controls.AdminLayout.Row(shippingLayout,
+                    ComputerStore.Admin.Controls.AdminLayout.Field(lblPhone, txtPhone, 420));
+                ComputerStore.Admin.Controls.AdminLayout.Row(shippingLayout,
+                    ComputerStore.Admin.Controls.AdminLayout.Field(lblAddress, txtAddress, 420));
+                var cancel = new ComputerStore.Admin.Controls.AdminButton { Text = "Hủy", DialogResult = DialogResult.Cancel };
+                ComputerStore.Admin.Controls.AdminLayout.Row(shippingLayout,
+                    ComputerStore.Admin.Controls.AdminLayout.Toolbar(btnConfirm, cancel));
+                prompt.Controls.Add(shippingLayout);
+                prompt.AutoSize = true;
+                prompt.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+                prompt.FormBorderStyle = FormBorderStyle.FixedDialog;
+                prompt.MaximizeBox = false;
+                prompt.MinimizeBox = false;
+                prompt.ShowInTaskbar = false;
+                prompt.MinimumSize = new Size(490, 360);
+                prompt.CancelButton = cancel;
                 prompt.AcceptButton = btnConfirm;
                 // Kiểm tra ngay trong hộp thoại, không đóng rồi làm mất nội dung đã nhập.
                 btnConfirm.Click += (_, _) =>
@@ -363,6 +417,7 @@ namespace ComputerStore.Admin.Forms
                     if (address.Length is < 1 or > 500) { MessageBox.Show(prompt, "Địa chỉ phải có từ 1 đến 500 ký tự."); txtAddress.Focus(); return; }
                     prompt.DialogResult = DialogResult.OK;
                 };
+                ComputerStore.Admin.Controls.AdminTheme.Apply(prompt);
                 if (prompt.ShowDialog(this) != DialogResult.OK || _closed) return;
                 var success = await _apiService.UpdateOrderShippingAsync(orderId,
                     txtName.Text.Trim(), txtPhone.Text.Trim(), txtAddress.Text.Trim(), _requestToken);
