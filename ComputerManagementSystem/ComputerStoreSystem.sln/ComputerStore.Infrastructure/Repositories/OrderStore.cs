@@ -7,24 +7,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace ComputerStore.Infrastructure.Repositories;
-
-// Kho lưu trữ và xử lý giao dịch đơn hàng, giỏ hàng (hiện thực IOrderStore)
 public sealed class OrderStore(ApplicationDbContext db) : IOrderStore
 {
-    // Kiểm tra người dùng có phải là Admin hay không
     public Task<bool> IsAdminAsync(int userId, CancellationToken ct) => db.Users
         .AnyAsync(u => u.UserId == userId && u.Role != null && u.Role.RoleName == "Admin", ct);
-
-    // Kiểm tra người dùng có phải tài khoản hợp lệ trong hệ thống hay không
     public Task<bool> IsAccountAsync(int userId, CancellationToken ct) => db.Users
         .AnyAsync(u => u.UserId == userId && u.Role != null &&
             (u.Role.RoleName == "Admin" || u.Role.RoleName == "Customer"), ct);
-
-    // Lấy thông tin các sản phẩm trong giỏ hàng theo danh sách ID
     public Task<List<Product>> CartProductsAsync(int[] ids, CancellationToken ct) => db.Products
         .AsNoTracking().Where(p => ids.Contains(p.ProductId)).ToListAsync(ct);
 
-    // Phép chiếu DTO tóm tắt đơn hàng kèm chi tiết các dòng sản phẩm
     private static IQueryable<OrderSummaryDto> Project(IQueryable<Order> query) => query.Select(o => new OrderSummaryDto
     {
         OrderId = o.OrderId,
@@ -32,6 +24,7 @@ public sealed class OrderStore(ApplicationDbContext db) : IOrderStore
         CustomerName = o.CustomerName,
         CustomerPhone = o.CustomerPhone,
         DeliveryAddress = o.DeliveryAddress,
+            PaymentMethod = o.PaymentMethod,
         OrderDate = o.OrderDate,
         TotalAmount = o.TotalAmount,
         Status = o.Status,
@@ -45,8 +38,6 @@ public sealed class OrderStore(ApplicationDbContext db) : IOrderStore
             UnitPrice = d.UnitPrice
         }).ToList()
     });
-
-    // Lấy danh sách toàn bộ đơn hàng (hỗ trợ tìm kiếm theo từ khóa hoặc số điện thoại)
     public Task<List<OrderSummaryDto>> ListAsync(string? search, string? phone, CancellationToken ct)
     {
         var query = db.Orders.AsNoTracking().AsQueryable();
@@ -63,23 +54,18 @@ public sealed class OrderStore(ApplicationDbContext db) : IOrderStore
         }
         return Project(query.OrderByDescending(o => o.OrderId)).ToListAsync(ct);
     }
-
-    // Đọc chi tiết 1 đơn hàng theo ID (kiểm tra quyền sở hữu của khách hoặc quyền Admin)
     public Task<OrderSummaryDto?> ReadAsync(int id, int actorId, bool admin, CancellationToken ct) =>
         Project(db.Orders.AsNoTracking().Where(o => o.OrderId == id && (admin || o.UserId == actorId)))
             .FirstOrDefaultAsync(ct);
 
-    // Mở một giao dịch CSDL (Database Transaction) với mức cô lập Serializable
     public async Task<IOrderTransaction> BeginAsync(CancellationToken ct) =>
         new Transaction(await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct), db);
 
-    // Khóa sản phẩm bằng câu lệnh SQL UPDLOCK, HOLDLOCK để đảm bảo trừ tồn kho an toàn tuyệt đối
-    // Tránh race condition khi nhiều khách cùng đặt mua chiếc máy tính cuối cùng
+    // Tham số được EF parameterize. UPDLOCK giữ khóa tới hết transaction,
+    // tránh hai yêu cầu cùng đọc một giá trị tồn kho rồi cùng ghi đè.
     public Task<Product?> LockProductAsync(int id, CancellationToken ct) => db.Products
         .FromSqlInterpolated($"SELECT * FROM dbo.Products WITH (UPDLOCK, HOLDLOCK) WHERE ProductId = {id}")
         .SingleOrDefaultAsync(ct);
-
-    // Khóa đơn hàng kèm danh sách OrderDetails để cập nhật trạng thái hoặc hoàn kho
     public async Task<Order?> LockOrderAsync(int id, CancellationToken ct)
     {
         var order = await db.Orders
@@ -88,41 +74,27 @@ public sealed class OrderStore(ApplicationDbContext db) : IOrderStore
         if (order != null) await db.Entry(order).Collection(o => o.OrderDetails).LoadAsync(ct);
         return order;
     }
-
-    // Thêm đơn hàng mới
     public void Add(Order order) => db.Orders.Add(order);
-
-    // Xóa đơn hàng và các dòng chi tiết liên quan
     public void Delete(Order order)
     {
         db.OrderDetails.RemoveRange(order.OrderDetails);
         db.Orders.Remove(order);
     }
-
-    // Lưu các thay đổi vào CSDL
     public async Task SaveAsync(CancellationToken ct) => await db.SaveChangesAsync(ct);
 
-    // Khóa chủ giỏ hàng (User) trước khi đọc/sửa giỏ để chống tạo trùng khóa khi nhấn liên tiếp
+    // Mọi luồng ghi giỏ và checkout khóa cùng User trước khi đọc/sửa giỏ.
+    // Khóa cả khi giỏ trống để chống hai yêu cầu thêm cùng lúc tạo trùng khóa.
     public async Task<bool> LockCartOwnerAsync(int userId, CancellationToken ct) =>
         await db.Users.FromSqlInterpolated(
             $"SELECT * FROM dbo.Users WITH (UPDLOCK, HOLDLOCK) WHERE UserId = {userId}")
             .SingleOrDefaultAsync(ct) != null;
-
-    // Đọc danh sách các mục trong giỏ hàng (chế độ chỉ đọc AsNoTracking)
     public Task<List<ShoppingCartItem>> ReadCartAsync(int userId, CancellationToken ct) =>
         db.ShoppingCartItems.AsNoTracking().Where(x => x.UserId == userId).OrderBy(x => x.ProductId).ToListAsync(ct);
-
-    // Đọc danh sách giỏ hàng để cập nhật số lượng
     public Task<List<ShoppingCartItem>> ReadCartForUpdateAsync(int userId, CancellationToken ct) =>
         db.ShoppingCartItems.Where(x => x.UserId == userId).OrderBy(x => x.ProductId).ToListAsync(ct);
-
-    // Thêm mục mới vào giỏ hàng
     public void AddCartItem(ShoppingCartItem item) => db.ShoppingCartItems.Add(item);
-
-    // Xóa các mục khỏi giỏ hàng
     public void RemoveCartItems(IEnumerable<ShoppingCartItem> items) => db.ShoppingCartItems.RemoveRange(items);
 
-    // Lớp nội bộ thực thi IOrderTransaction đóng gói giao dịch CSDL
     private sealed class Transaction(IDbContextTransaction tx, ApplicationDbContext db) : IOrderTransaction
     {
         private bool committed;
@@ -133,7 +105,7 @@ public sealed class OrderStore(ApplicationDbContext db) : IOrderStore
         }
         public async ValueTask DisposeAsync()
         {
-            try { await tx.DisposeAsync(); } // Dispose transaction chưa commit sẽ tự động rollback
+            try { await tx.DisposeAsync(); } // Dispose transaction chưa commit sẽ rollback.
             finally { if (!committed) db.ChangeTracker.Clear(); }
         }
     }
