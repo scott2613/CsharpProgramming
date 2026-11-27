@@ -28,6 +28,8 @@ public class Program
         builder.Services.AddScoped<IProductWriteRepository, ProductWriteRepository>();
         builder.Services.AddScoped<IProductCommandService, ProductCommandService>();
         builder.Services.AddScoped<IOrderStore, OrderStore>();
+        builder.Services.AddScoped<IDashboardStore, DashboardStore>();
+        builder.Services.AddScoped<IDashboardService, DashboardService>();
         builder.Services.AddScoped<IOrderService, OrderService>();
         builder.Services.AddScoped<ICartService, CartService>();
         builder.Services.AddScoped<IAccountRepository, AccountRepository>();

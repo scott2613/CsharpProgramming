@@ -25,6 +25,24 @@ static class Checks
     {
         var cases = new (string Name, Func<Task> Test)[]
         {
+            ("Owner filter ignores shared recipient phone",async()=>{
+                var db=Store();var svc=new OrderService(db);
+                await svc.PlaceAsync(2,Request((10,1)),Ct);await svc.PlaceAsync(3,Request((10,1)),Ct);
+                var rows=await svc.ListAsync(1,null,null,Ct,2);Equal(1,rows.Count);Equal((int?)2,rows[0].UserId);
+                Equal(2,(await svc.ListAsync(1,null,null,Ct)).Count);
+            }),
+            ("Owner filter still finds changed recipient phone",async()=>{
+                var db=Store();var svc=new OrderService(db);await svc.PlaceAsync(2,Request((10,1)),Ct);
+                db.Orders[0].CustomerPhone="0987654321";
+                Equal(1,(await svc.ListAsync(1,null,null,Ct,2)).Count);
+                Equal(0,(await svc.ListAsync(1,null,null,Ct,3)).Count);
+            }),
+            ("Customer cannot use admin owner filter",async()=>{
+                await Reject(()=>new OrderService(Store()).ListAsync(2,null,null,Ct,3),403);
+            }),
+            ("Nonpositive owner ID rejected",async()=>{
+                await Reject(()=>new OrderService(Store()).ListAsync(1,null,null,Ct,0),400);
+            }),
             ("BANKING address update preserves payment",async()=>{
                 var db=Store();var service=new OrderService(db);var req=Request((10,1));req.PaymentMethod="BANKING";
                 var result=await service.PlaceAsync(2,req,Ct);
@@ -126,7 +144,7 @@ sealed class MemoryStore : IOrderStore
     public Task<bool> IsAdminAsync(int id,CancellationToken ct)=>Task.FromResult(id==1);
     public Task<bool> IsAccountAsync(int id,CancellationToken ct)=>Task.FromResult(id is 1 or 2 or 3);
     public Task<List<Product>> CartProductsAsync(int[] ids,CancellationToken ct)=>Task.FromResult(Products.Values.Where(p=>ids.Contains(p.ProductId)).ToList());
-    public Task<List<OrderSummaryDto>> ListAsync(string? search,string? phone,CancellationToken ct)=>Task.FromResult(new List<OrderSummaryDto>());
+    public Task<List<OrderSummaryDto>> ListAsync(string? search,string? phone,CancellationToken ct,int? userId=null)=>Task.FromResult(Orders.Where(o=>!userId.HasValue||o.UserId==userId.Value).Select(o=>new OrderSummaryDto{OrderId=o.OrderId,UserId=o.UserId,CustomerPhone=o.CustomerPhone}).ToList());
     public Task<OrderSummaryDto?> ReadAsync(int id,int actor,bool admin,CancellationToken ct)
     {
         var o=Orders.FirstOrDefault(x=>x.OrderId==id&&(admin||x.UserId==actor));

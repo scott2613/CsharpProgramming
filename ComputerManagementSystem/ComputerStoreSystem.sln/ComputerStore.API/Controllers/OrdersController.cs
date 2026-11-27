@@ -16,8 +16,8 @@ public sealed class OrdersController(IOrderService orders) : ControllerBase
     private int ActorId => AccountIdentity.Id(User);
 
     [HttpGet, Authorize(Roles = StoreRoles.Admin)]
-    public async Task<IActionResult> GetOrders([FromQuery] string? search, [FromQuery] string? customerPhone, CancellationToken ct)
-        => Ok(await orders.ListAsync(ActorId, search, customerPhone, ct));
+    public async Task<IActionResult> GetOrders([FromQuery] string? search, [FromQuery] string? customerPhone, CancellationToken ct, [FromQuery] int? userId = null)
+        => Ok(await orders.ListAsync(ActorId, search, customerPhone, ct, userId));
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetOrder(int id, CancellationToken ct)
