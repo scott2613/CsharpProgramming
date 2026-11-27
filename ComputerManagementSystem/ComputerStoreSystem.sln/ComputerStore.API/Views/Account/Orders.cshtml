@@ -271,10 +271,7 @@
                                         @foreach (var item in orders)
                                         {
                                             var address = item.DeliveryAddress ?? "";
-                                            var paymentMarker = address.LastIndexOf(" [PTTT: ", StringComparison.Ordinal);
-                                            var hasPayment = paymentMarker >= 0 && address.EndsWith("]", StringComparison.Ordinal);
-                                            var payment = hasPayment ? address[(paymentMarker + 8)..^1] : "Chưa ghi nhận";
-                                            if (hasPayment) address = address[..paymentMarker];
+                                            var payment = item.PaymentMethodDisplay;
                                             <tr class="order-row-item" data-order-id="@item.OrderId" data-status="@item.Status">
                                                 <td><span style="font-family: 'Orbitron'; font-weight: 800; color: var(--neon-cyan);">#@item.OrderId</span></td>
                                                 <td>

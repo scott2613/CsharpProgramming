@@ -25,6 +25,21 @@ static class Checks
     {
         var cases = new (string Name, Func<Task> Test)[]
         {
+            ("BANKING address update preserves payment",async()=>{
+                var db=Store();var service=new OrderService(db);var req=Request((10,1));req.PaymentMethod="BANKING";
+                var result=await service.PlaceAsync(2,req,Ct);
+                Equal("BANKING",result.PaymentMethod);Equal("123 Đường A",db.Orders[0].DeliveryAddress);
+                await service.UpdateShippingAsync(1,result.OrderId,new OrderShippingRequest{DeliveryAddress="456 Đường B"},Ct);
+                Equal("BANKING",db.Orders[0].PaymentMethod);Equal("456 Đường B",db.Orders[0].DeliveryAddress);
+            }),
+            ("COD persists separately from address",async()=>{
+                var db=Store();var result=await new OrderService(db).PlaceAsync(2,Request((10,1)),Ct);
+                Equal("COD",result.PaymentMethod);Equal("123 Đường A",result.DeliveryAddress);
+            }),
+            ("Unsupported payment rejected without stock changes",async()=>{
+                var db=Store();var req=Request((10,1));req.PaymentMethod="VNPAY";
+                await Reject(()=>new OrderService(db).PlaceAsync(2,req,Ct),400);Equal(5,db.Products[10].StockQuantity);Equal(0,db.Orders.Count);
+            }),
             ("Negative quantity does not increase stock",async()=>{
                 var db=Store(); await Reject(()=>new OrderService(db).PlaceAsync(2,Request((10,-1)),Ct),400); Equal(5,db.Products[10].StockQuantity); Equal(0,db.Orders.Count);
             }),
